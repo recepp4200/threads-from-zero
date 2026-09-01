@@ -1,0 +1,402 @@
+<title>Threads From Zero — The Podcast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#12141c; --surface:#191c26; --surface-2:#20242f;
+    --border:#2b3040; --border-soft:#232735;
+    --text:#e7e9ee; --text-dim:#9198ab; --text-faint:#5f6577;
+    --accent:#e8a33d; --accent-soft:#4a3a22;
+    --accent-2:#5fb3a3; --accent-2-soft:#1f3733;
+    --danger:#e2685f;
+    --serif:"IBM Plex Serif", Georgia, serif;
+    --sans:"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono:"IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="light"] ):not([data-theme="dark"]){
+      --bg:#f7f4ec; --surface:#ffffff; --surface-2:#f0ece1;
+      --border:#ddd6c4; --border-soft:#e7e1d2;
+      --text:#211d14; --text-dim:#635c49; --text-faint:#8d8570;
+      --accent:#a86a1c; --accent-soft:#f1decb;
+      --accent-2:#2f746a; --accent-2-soft:#dcece8;
+      --danger:#a3392f;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#f7f4ec; --surface:#ffffff; --surface-2:#f0ece1;
+    --border:#ddd6c4; --border-soft:#e7e1d2;
+    --text:#211d14; --text-dim:#635c49; --text-faint:#8d8570;
+    --accent:#a86a1c; --accent-soft:#f1decb;
+    --accent-2:#2f746a; --accent-2-soft:#dcece8;
+    --danger:#a3392f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:var(--accent-2);}
+  ::selection{background:var(--accent-soft); color:var(--text);}
+
+  .wrap{max-width:760px; margin:0 auto; padding:56px 24px 120px;}
+  .back{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--mono); font-size:.78rem; color:var(--text-dim);
+    text-decoration:none; margin-bottom:28px;
+  }
+  .back:hover{color:var(--accent);}
+  .kicker{
+    font-family:var(--mono); font-size:.74rem; text-transform:uppercase; letter-spacing:.16em;
+    color:var(--accent); margin:0 0 14px;
+  }
+  h1{
+    font-family:var(--serif); font-weight:700; font-size:clamp(2rem,4.4vw,2.9rem);
+    line-height:1.1; margin:0 0 16px; text-wrap:balance;
+  }
+  .dek{color:var(--text-dim); font-size:1.05rem; max-width:60ch; margin:0 0 20px;}
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:8px; margin-bottom:48px;
+  }
+  .meta-row span{
+    font-family:var(--mono); font-size:.72rem; padding:5px 10px;
+    border:1px solid var(--border); border-radius:20px; color:var(--text-dim);
+  }
+
+  .part-label{
+    font-family:var(--mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.16em;
+    color:var(--accent); margin:44px 0 6px;
+  }
+  .part-label:first-of-type{margin-top:0;}
+  .part-title{
+    font-family:var(--serif); font-weight:600; font-size:1.3rem;
+    margin:0 0 20px;
+  }
+
+  .ep{
+    border:1px solid var(--border); border-radius:12px;
+    background:var(--surface);
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .ep summary{
+    list-style:none; cursor:pointer;
+    padding:18px 20px;
+    display:flex; align-items:flex-start; gap:16px;
+  }
+  .ep summary::-webkit-details-marker{display:none;}
+  .ep-num{
+    font-family:var(--mono); font-size:.78rem; color:var(--bg);
+    background:var(--accent); width:30px; height:30px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex:none; margin-top:2px;
+  }
+  .ep-head{flex:1; min-width:0;}
+  .ep-title{
+    font-family:var(--serif); font-weight:600; font-size:1.12rem;
+    margin:0 0 6px; text-wrap:balance;
+  }
+  .ep-desc{color:var(--text-dim); font-size:.9rem; margin:0 0 8px;}
+  .ep-tags{display:flex; flex-wrap:wrap; gap:6px;}
+  .ep-tags span{
+    font-family:var(--mono); font-size:.66rem; color:var(--text-faint);
+    border:1px solid var(--border-soft); border-radius:12px; padding:2px 8px;
+  }
+  .ep-toggle{
+    font-family:var(--mono); font-size:.7rem; color:var(--text-faint);
+    flex:none; margin-top:6px; transition:transform .2s ease;
+  }
+  .ep[open] .ep-toggle{transform:rotate(180deg);}
+
+  .script{
+    padding:4px 20px 24px 66px;
+    border-top:1px solid var(--border-soft);
+  }
+  .line{display:flex; gap:14px; margin:14px 0; align-items:baseline;}
+  .who{
+    font-family:var(--mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.06em;
+    flex:none; width:56px; padding-top:2px;
+  }
+  .who.priya{color:var(--accent);}
+  .who.jonah{color:var(--accent-2);}
+  .line p{margin:0; color:var(--text-dim); font-size:.94rem; line-height:1.65;}
+  .line p strong{color:var(--text);}
+  .line p code{
+    font-family:var(--mono); font-size:.88em; background:var(--surface-2);
+    border:1px solid var(--border-soft); padding:.03em .35em; border-radius:5px; color:var(--accent-2);
+  }
+  .stage{
+    font-style:italic; color:var(--text-faint); font-size:.82rem;
+    margin:16px 0 16px 70px;
+  }
+  .takeaway{
+    margin:20px 20px 22px 20px;
+    padding:14px 16px;
+    background:var(--accent-soft);
+    border-radius:10px;
+    font-size:.88rem;
+  }
+  .takeaway strong{
+    display:block; font-family:var(--mono); font-size:.66rem; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--accent); margin-bottom:4px;
+  }
+
+  footer{
+    margin-top:56px; padding-top:32px; border-top:1px solid var(--border-soft);
+    color:var(--text-faint); font-size:.85rem;
+  }
+</style>
+
+<div class="wrap">
+  <a class="back" href="./">← Back to the course</a>
+  <p class="kicker">A companion listen</p>
+  <h1>Threads From Zero — The Podcast</h1>
+  <p class="dek">Eight scripted episodes, two hosts, no filler — the same two-part course (C# concurrency, then the operating system underneath it) read out loud instead of read on screen. These are full production scripts: stage directions, running bits, the works. Feed them to a TTS voice, record them yourself, or just read them here.</p>
+  <div class="meta-row">
+    <span>8 episodes</span>
+    <span>~10–14 min each</span>
+    <span>Hosts: Priya &amp; Jonah</span>
+    <span>Scripts, not audio — see note below</span>
+  </div>
+
+  <p class="part-label">Part One</p>
+  <p class="part-title">The C# Concurrency Season</p>
+
+  <details class="ep">
+    <summary>
+      <span class="ep-num">1</span>
+      <div class="ep-head">
+        <h3 class="ep-title">Threads Are Just Employees</h3>
+        <p class="ep-desc">What a thread actually is, why the office-building metaphor works, and the difference between sync and async — before a single line of code.</p>
+        <div class="ep-tags"><span>process vs thread</span><span>sync vs async</span><span>the main thread</span></div>
+      </div>
+      <span class="ep-toggle">▾</span>
+    </summary>
+    <div class="script">
+      <div class="stage">[cold open — office ambience, a phone ringing once]</div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Okay, so — you know how every program you've ever run had, like, one thing happening at a time in your head?</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Sure. Line one runs, then line two runs. That's — isn't that just how code works?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>That's how <em>one thread</em> works. Today we're breaking that assumption on purpose. Welcome to Threads From Zero, I'm Priya —</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>— and I'm Jonah, and I will be the one asking "wait, why though" approximately every ninety seconds.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Good, that's the job. Okay. Picture an office building. The building is a <strong>process</strong> — it's memory the OS handed out, resources, the works. Now, the people actually inside doing work? Those are <strong>threads</strong>.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>So a process is empty until someone shows up.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Never empty, actually — that's the fun part. The building can't legally open with nobody inside. So the very first person who walks in, that nobody explicitly hired? That's your <code>Main</code> method. The runtime just calls it "the main thread" and moves on.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Nobody interviewed them, they just... showed up and now they run the place.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Basically a founder. Anyone <em>you</em> hire after that — <code>new Thread(...)</code> — those are worker threads. Same building, same floor plan, different desk.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay, and sync versus async — is that a thread thing?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Trap question, and a good one. It's not the same axis at all, people mix these up constantly. Sync is a phone call — you're stuck, hand on the receiver, until the other end picks up. Async is email — you send it, you go back to your actual day, and the reply lands whenever it lands.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>And you can be async on a <em>single</em> thread?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>You absolutely can — that's the part that breaks people's brains later when we get to <code>Task</code> and <code>await</code>. But we're not there yet. Multithreading first, because half of async's vocabulary is borrowed straight from what we're about to build.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>So today's takeaway is basically: the building was never empty, and don't confuse "many workers" with "not waiting around."</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>That's the whole episode. Next time — we actually hire someone.</p></div>
+      <div class="takeaway"><strong>Show note</strong>A process is the building; the main thread is the uninvited founder who showed up first; sync/async and multithreading are two different, related questions. Covers Modules 0–1.</div>
+    </div>
+  </details>
+
+  <details class="ep">
+    <summary>
+      <span class="ep-num">2</span>
+      <div class="ep-head">
+        <h3 class="ep-title">The Whiteboard That Lies to You</h3>
+        <p class="ep-desc">Race conditions, why <code>counter++</code> is secretly three instructions, and the single office key that fixes almost everything: <code>lock</code>, Monitor, and Mutex.</p>
+        <div class="ep-tags"><span>race conditions</span><span>lock / Monitor</span><span>Mutex</span></div>
+      </div>
+      <span class="ep-toggle">▾</span>
+    </summary>
+    <div class="script">
+      <div class="line"><span class="who jonah">JONAH</span><p>Last time you said threads share a building. Doesn't that mean two of them can just... grab the same thing at once?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>That's the whole episode, actually. Picture a whiteboard tally in the break room. Two coworkers both glance at it, both see "12," both think "thirteen," both write "13."</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay but... it should be 14 now, right? Two people added one each.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Should be. It's 13. One of those updates just — vanished. And here's the unsettling bit: neither coworker will ever know it happened, because the whiteboard doesn't keep a diary.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>That is deeply upsetting for something with a name as boring as "race condition."</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>The name undersells it. And it's not even a big dramatic bug in the code — <code>counter++</code> looks like one instruction. It's not. It's read, add one, write back. Three steps. Anything can slip in between any two of them.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>So how do you stop it — do you just... tell the threads to take turns?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Sort of — you give the room exactly one key. <code>lock</code> in C# is that key on a hook by the door. Whoever grabs it works undisturbed; everyone else waits in the hallway, no schedule, just "first one there holds it."</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>And Monitor is... the same thing?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p><code>lock</code> literally compiles down to <code>Monitor.Enter</code> and <code>Monitor.Exit</code> wrapped in a try/finally. You'd use Monitor directly when you want a timeout, or need to know whether you actually got the key — <code>lockTaken</code>, all that.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay, and Mutex is the fancy version?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Mutex is the version for when the key needs to work on a building across the street. Two separate processes, one shared loading-dock key — and because it has to be visible to a completely different program, it's registered with the actual operating system instead of just living in your app's memory. Which also makes it slower. Costs a real trip to, essentially, city hall every time.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>So: cheap key for coworkers in the same building, expensive key for coworkers in a different building entirely.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>That's the whole trade-off. And — small flex — the classic "single instance of this app" trick? That's a named Mutex checking if the key's already taken before your app even opens a window.</p></div>
+      <div class="takeaway"><strong>Show note</strong>A race condition is a lost update on a shared value; <code>lock</code>/Monitor solve it in-process; Mutex solves the same problem across process boundaries, at OS cost. Covers Modules 3–5.</div>
+    </div>
+  </details>
+
+  <details class="ep">
+    <summary>
+      <span class="ep-num">3</span>
+      <div class="ep-head">
+        <h3 class="ep-title">Seats, Spinners, and Mail Slots</h3>
+        <p class="ep-desc">When one key isn't enough — Semaphore, the readers/writers bulletin board, spinning versus sleeping, and the one instruction that can't be interrupted.</p>
+        <div class="ep-tags"><span>Semaphore</span><span>SpinLock</span><span>Interlocked</span><span>MemoryBarrier</span></div>
+      </div>
+      <span class="ep-toggle">▾</span>
+    </summary>
+    <div class="script">
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay so one key, one person at a time — got it. But what if I <em>want</em> more than one person in?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Then you're not describing a lock anymore, you're describing a conference room with three chairs. Fourth person shows up, they don't get turned away forever — they just wait by the door until somebody stands up.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>That's Semaphore.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>That's Semaphore. And SemaphoreSlim is the same idea without the trip to the OS — cheaper, and it actually plays nicely with <code>async</code> later. There's also a variant for a very specific shape of problem — readers and writers.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Which is what, people reading a Google Doc?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Basically! A bulletin board — as many people as you want can read it simultaneously, zero conflict. But the second someone starts re-pinning notices, everyone else has to back off. You can't safely read a board mid-shuffle.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Alright, new topic — you mentioned "spinning" earlier and it sounded ominous.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Two coworkers, one copier. One of them stands there tapping the door handle every second until it opens — that's spinning, <code>SpinLock</code>. The other one just walks back to their desk and waits to be told — that's blocking, your regular lock.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Tapping seems... exhausting? Why would you ever do that?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Because going back to your desk and getting told has a real cost — someone has to physically come find you. If the copier's about to open in like, half a second, tapping wins. If it's gonna be five minutes, tapping is just you burning a CPU core for nothing.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay last one on the list — Interlocked. That name is very aggressive for something I assume is small.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>It IS small — that's the whole point. Instead of a whiteboard tally two people can misread mid-write, imagine a mechanical click-counter bolted to the door. One motion. There's no "half-written" state for anyone to accidentally catch.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>And MemoryBarrier?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>That one's the weird one — it's not about who goes first, it's about making sure a written note actually arrives in order. An inter-office mail slot that guarantees letters land in the order they were dropped in. Without it, a fast note can technically overtake a slower one that was sent earlier, and nobody would ever know the order got scrambled.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>That is the spookiest thing you've said all episode.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Save your fear — next episode has a room full of philosophers who can't eat dinner. It gets spookier.</p></div>
+      <div class="takeaway"><strong>Show note</strong>Semaphore/SemaphoreSlim generalize a lock to N permits; ReaderWriterLockSlim splits safe-concurrent reads from exclusive writes; spinning trades CPU for latency; Interlocked and MemoryBarrier operate below the level of locks entirely. Covers Modules 6–10.</div>
+    </div>
+  </details>
+
+  <details class="ep">
+    <summary>
+      <span class="ep-num">4</span>
+      <div class="ep-head">
+        <h3 class="ep-title">Turnstiles, Checkpoints, and the Staffing Agency</h3>
+        <p class="ep-desc">Threads talking to each other on purpose — AutoResetEvent, ManualResetEvent, Barrier — then closing out Part One with ThreadPool, ThreadLocal, and Timers.</p>
+        <div class="ep-tags"><span>signaling</span><span>Barrier</span><span>ThreadPool</span><span>wrap-up</span></div>
+      </div>
+      <span class="ep-toggle">▾</span>
+    </summary>
+    <div class="script">
+      <div class="line"><span class="who jonah">JONAH</span><p>So far every tool's been about keeping threads <em>apart</em>. Is there a version where they're actually supposed to talk?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Yes — signaling. Think subway turnstile. Every buzz lets exactly one person through, then it locks itself again automatically. Nobody has to remember to reset it. That's <code>AutoResetEvent</code>.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>And ManualResetEvent is the door that just... stays open?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>A propped-open fire door. Everyone goes through at once, and it stays open until someone deliberately shuts it. Wildly different use cases, similar name, please don't mix them up in an interview.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Noted. What's Barrier — that sounds like the opposite of a door.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>It's a meeting that literally cannot start until everyone's badged in. Whoever arrives first doesn't get to just start — they wait by the door for the stragglers. Then everybody walks in together. Great for anything with real "phases" — chunked file processing, batched API calls.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay, we're near the end of Part One — give me the ThreadPool pitch.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>A staffing agency with three permanent desks and a bottomless inbox tray. Nobody's hired or fired between tickets — whoever's free just grabs the next one. Because — quick fact that should scare you a little — a brand new <code>Thread</code> costs about a megabyte and real OS setup time, every single time.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>So don't `new Thread()` in a loop.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Never `new Thread()` in a loop. And ThreadLocal is the fun closer — think office noticeboard versus everyone's own desk drawer. The noticeboard says the same thing to everyone. Your drawer is yours; nobody else's drawer changes because you put something in yours.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>And Timers?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Office wall clock. Chimes on schedule, not to the millisecond — close enough to start the meeting, never precise enough to run a stopwatch race. And that — is a wrap on Part One.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Wait, that's it? What about the actual operating system all of this is secretly running on top of?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>...Jonah. That's Part Two. We have four more episodes. Sit down.</p></div>
+      <div class="takeaway"><strong>Show note</strong>Signaling constructs coordinate threads instead of excluding them; ThreadPool reuses a fixed staff instead of hiring per job; ThreadLocal gives each thread private state. Closes out Part One. Covers Modules 11–16.</div>
+    </div>
+  </details>
+
+  <p class="part-label">Part Two</p>
+  <p class="part-title">The Operating System Season</p>
+
+  <details class="ep">
+    <summary>
+      <span class="ep-num">5</span>
+      <div class="ep-head">
+        <h3 class="ep-title">Just Enough OS to Be Dangerous</h3>
+        <p class="ep-desc">What an operating system is actually for, the trip every syscall makes into kernel mode, the boot sequence, and the five-state life of a process.</p>
+        <div class="ep-tags"><span>syscalls</span><span>kernel mode</span><span>process states</span></div>
+      </div>
+      <span class="ep-toggle">▾</span>
+    </summary>
+    <div class="script">
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay, I've been waiting all season — what actually IS the OS, under our whole office building metaphor?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>The city government. Every building in town is running on top of it, whether the tenants ever think about it or not. It issues permits, rations power, and settles every dispute between buildings.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>And a syscall is...?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>A citizen walking into city hall with a form. You can't just wire your own house into the power grid — you file a request, city staff actually do the work, and you get a receipt. That's a syscall: your code traps into the kernel, the kernel does the privileged thing, control comes back.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Why can't my code just... do the privileged thing itself?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Because "privileged" is doing a lot of work in that sentence. User-mode code is sandboxed on purpose — it can't touch another process's memory, can't talk to hardware directly. The kernel is the only code allowed to. That boundary is the entire reason a rogue app can't just corrupt your whole machine.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay, and when I hit the power button — what actually happens before my code runs?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Firmware wakes up first, knows almost nothing except how to find a boot device. It loads a small bootloader, which loads the real kernel, which initializes drivers and starts exactly one user process — <code>init</code> or <code>systemd</code> on Linux. That one process spawns literally everything else you'll ever see on the machine.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>One process to rule them all.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Basically. And once a process exists, it only ever lives in one of five states — New, Ready, Running, Waiting, Terminated. Sound familiar?</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>...That's <code>ThreadState</code> from Part One, isn't it.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Same machine, Jonah. It was always the same machine. That's the whole point of this season.</p></div>
+      <div class="takeaway"><strong>Show note</strong>The OS is the resource manager under every process; syscalls are the only doorway into kernel mode; the boot sequence ends with one process spawning all the rest; the five-state process lifecycle is exactly what <code>ThreadState</code> exposes in C#. Covers OS Modules 1–3.</div>
+    </div>
+  </details>
+
+  <details class="ep">
+    <summary>
+      <span class="ep-num">6</span>
+      <div class="ep-head">
+        <h3 class="ep-title">Photocopying an Office, and the Fork Bomb</h3>
+        <p class="ep-desc"><code>fork()</code>, <code>exec()</code>, talking across the process boundary — and the four-character line of code that can take down a whole machine.</p>
+        <div class="ep-tags"><span>fork / exec</span><span>IPC</span><span>CPU scheduling</span></div>
+      </div>
+      <span class="ep-toggle">▾</span>
+    </summary>
+    <div class="script">
+      <div class="line"><span class="who priya">PRIYA</span><p>Okay, <code>fork()</code>. This one's genuinely wild the first time you see it. Imagine a building manager instantly photocopying the entire office — every desk, every filing cabinet, the coffee mug mid-sip.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>And both copies think they're the original?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Exactly — the only thing telling them apart is <code>fork()</code>'s return value. Zero in the copy, the copy's process ID in the original. Both just... keep running from the exact same line.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>That feels like it should be expensive.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Modern systems cheat with copy-on-write — nothing's actually duplicated until one side writes to it. And usually right after forking, the child calls <code>exec()</code> and becomes a completely different program. That's how every shell launches anything — fork, then exec.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay, and now that we have two separate processes — how do they talk, if they don't share memory anymore?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Two honest options. Shared memory — fast, but now you're back to needing every lock and semaphore from Part One, just across a process boundary. Or message passing — pipes, sockets — slower, but the kernel enforces the isolation for you.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>You said "fork bomb" in the episode title and I need to know now.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Okay so — there's a famous four-character-ish shell one-liner that defines a function that calls itself twice, in the background, forever. Every call doubles the number of running processes. Almost instantly.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>That sounds like it would just... eat the whole machine.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Within seconds. Exhausts the process table, exhausts memory, the machine stops responding to anything. It's exactly why production systems set hard per-user process limits — you cannot trust every process to self-regulate.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Great, love that for us. Quick scheduling question before we go — how does the OS decide who gets the CPU next?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>One road into downtown, everyone wants it. First-come-first-served is simple but one long job at the front stalls everyone behind it. Shortest-job-first is provably optimal but needs to predict the future. Round robin gives everyone a fixed slice and rotates — which is basically what real schedulers like Linux's CFS approximate, continuously, instead of a fixed textbook algorithm.</p></div>
+      <div class="takeaway"><strong>Show note</strong><code>fork()</code> duplicates a process; <code>exec()</code> replaces its program image; shared memory and message passing are the two ways separated processes talk; scheduling algorithms trade fairness against throughput against starvation. Covers OS Modules 4–5.</div>
+    </div>
+  </details>
+
+  <details class="ep">
+    <summary>
+      <span class="ep-num">7</span>
+      <div class="ep-head">
+        <h3 class="ep-title">Five Philosophers and a Really Bad Afternoon</h3>
+        <p class="ep-desc">The critical-section problem, formalized; Peterson's Algorithm; and the classic problem that turns a dinner party into a deadlock.</p>
+        <div class="ep-tags"><span>critical section</span><span>Peterson's Algorithm</span><span>deadlocks</span></div>
+      </div>
+      <span class="ep-toggle">▾</span>
+    </summary>
+    <div class="script">
+      <div class="line"><span class="who jonah">JONAH</span><p>We used a single office key back in episode two and just... trusted it worked. Was that fair of us?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>It was, but here's the actual rulebook underneath it. A correct solution needs three things at once: mutual exclusion — never two people in at once. Progress — the decision of who goes next can't be stalled forever by people not even trying to get in. Bounded waiting — nobody gets cut in front of infinitely.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>And there's an algorithm that proves you can do this with just... software? No special hardware?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Peterson's Algorithm — genuinely elegant, two processes, a shared "whose turn" variable and a flag each. Provably correct on paper. Nobody uses it in real code.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Why not, if it's correct?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Two reasons — it doesn't scale past two threads without real effort, and modern CPUs can reorder memory operations in ways that quietly break it without an explicit memory barrier. Remember MemoryBarrier from episode three? That's not optional here, it's load-bearing.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay. Tell me about the philosophers, I've been promised philosophers.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Five philosophers, round table, one fork between each pair — five forks total. Everyone needs both forks next to them to eat. Now — everyone reaches for the fork on their left, at the exact same instant.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>...oh no.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Every fork is now held. Every philosopher is one fork short, waiting on the neighbor who's holding it. Nobody can ever eat again. That, Jonah, is a deadlock — staged small enough to see the whole thing at once.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>What actually makes it a "real" deadlock and not just... a slow table?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Four conditions, all true simultaneously — resources held exclusively, holding one while waiting on another, no forcibly taking a fork back, and a circular chain of everyone waiting on the next person. Break any one of the four and it can't happen.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>So what's the actual fix for the philosophers?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Cheapest one: break the symmetry. Have one philosopher reach for the <em>right</em> fork first instead of the left. That one asymmetry is enough to make the whole cycle impossible — no vote, no coordinator, just one different order.</p></div>
+      <div class="takeaway"><strong>Show note</strong>Mutual exclusion, progress, and bounded waiting define a correct solution; Peterson's Algorithm proves it's possible in pure software but isn't used in practice; dining philosophers stages all four deadlock conditions at once, fixed by breaking lock-acquisition symmetry. Covers OS Modules 6–8.</div>
+    </div>
+  </details>
+
+  <details class="ep">
+    <summary>
+      <span class="ep-num">8</span>
+      <div class="ep-head">
+        <h3 class="ep-title">The City's Archive</h3>
+        <p class="ep-desc">Paging, virtual memory, page replacement, file systems, disk scheduling — and the season finale where Part One and Part Two turn out to be the same show.</p>
+        <div class="ep-tags"><span>paging</span><span>virtual memory</span><span>disk scheduling</span><span>full circle</span></div>
+      </div>
+      <span class="ep-toggle">▾</span>
+    </summary>
+    <div class="script">
+      <div class="line"><span class="who jonah">JONAH</span><p>Final episode! Let's finish strong — memory.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Every process believes it owns the whole building, address zero on up. The city just never mentions that "building" is actually rooms scattered across town, stitched together by a lookup table nobody outside city hall ever sees.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>That's paging.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>That's paging — fixed-size pages, a page table mapping each one to a physical frame, translated on literally every memory access by a piece of hardware called the MMU. And it doesn't even build the room until you actually walk into it — that's demand paging.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>And if downtown's full and you need a new room?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Something's gotta go. FIFO evicts the oldest — simple, but can somehow get <em>worse</em> with more frames, a genuinely weird result called Belady's Anomaly. LRU evicts whatever hasn't been touched in the longest time — much better in practice. And if you're doing this so much that you're spending more time evicting than working —</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>— thrashing.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Thrashing. Add more processes, and utilization goes <em>down</em>, not up. Machine looks frozen and there's no single obvious culprit.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay, disk — quick version?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>The city's permanent archive. Files get laid out contiguous, linked, or indexed — indexed's what real filesystems mostly use, it's basically a card catalog. And because a spinning disk's arm has to physically move, service order matters — SCAN sweeps across like an elevator instead of teleporting to whoever asked first.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>And none of that matters on an SSD.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Correct — no arm, no seek time, so SSD-aware schedulers throw most of that reasoning out. Great example of "the theory's right, production diverges once the hardware assumption stops holding."</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>Okay. Before we close out the whole season — pull it together for me.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p><code>Thread.Start()</code> is <code>fork()</code>. Monitor's thin lock versus a real kernel wait — that's user mode versus kernel mode. <code>Interlocked</code> is a hardware compare-and-swap instruction, not a C# invention. <code>SemaphoreSlim</code> IS the producer-consumer problem. That lock-ordering deadlock from episode two? Same shape as the resource-allocation-graph cycle from episode seven.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>So the whole first season was secretly this season.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>The whole first season was always this season. You were just meeting it through the front door first. That's Threads From Zero — thanks for listening, go touch a page fault.</p></div>
+      <div class="takeaway"><strong>Show note</strong>Paging and demand paging make address space bigger than physical RAM, at the cost of page-fault and thrashing risk; disk scheduling matters only because of physical seek time, which is why SSDs change the answer; the finale ties every C# Part One tool to its OS Part Two mechanism. Covers OS Modules 9–12.</div>
+    </div>
+  </details>
+
+  <footer>
+    Scripts only — no audio was generated for this series; there's no text-to-speech tool available in this environment. Feed any script above into a TTS service or record it yourself, or read it exactly as written above.
+  </footer>
+</div>
