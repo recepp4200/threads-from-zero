@@ -475,6 +475,32 @@
     background:var(--accent-soft);
   }
   .side-group a.active .n{color:var(--accent);}
+
+  /* ---------- Part divider ---------- */
+  .part-divider{
+    max-width:70ch;
+    margin:64px 0 44px;
+    padding-top:40px;
+    border-top:2px solid var(--accent);
+  }
+  .part-label{
+    font-family:var(--mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.16em;
+    color:var(--accent);
+  }
+  .part-title{
+    font-family:var(--serif); font-weight:700; font-size:clamp(1.6rem,3.2vw,2.3rem);
+    margin:10px 0 12px; text-wrap:balance;
+  }
+  .part-dek{color:var(--text-dim); font-size:1.02rem; max-width:62ch; margin:0;}
+
+  .bridge-table{width:100%; border-collapse:collapse; font-size:.86rem; margin:0 0 18px;}
+  .bridge-table th{
+    font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--text-faint); text-align:left; padding:8px 12px; border-bottom:1px solid var(--border-soft);
+  }
+  .bridge-table td{padding:9px 12px; border-bottom:1px solid var(--border-soft); color:var(--text-dim); vertical-align:top;}
+  .bridge-table td.c1{color:var(--accent); font-family:var(--mono); font-size:.82rem; white-space:nowrap;}
+  .bridge-table td.c2{color:var(--accent-2); font-family:var(--mono); font-size:.82rem; white-space:nowrap;}
 </style>
 
 <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
@@ -530,6 +556,36 @@
         <li><a href="#m16"><span class="n">16</span> Where this leads</a></li>
       </ol>
     </div>
+
+    <div class="side-group">
+      <h3>Part Two — the OS</h3>
+      <ol>
+        <li><a href="#os1"><span class="n">1</span> What an OS actually does</a></li>
+        <li><a href="#os2"><span class="n">2</span> Syscalls &amp; the boot sequence</a></li>
+        <li><a href="#os3"><span class="n">3</span> The process &amp; its states</a></li>
+        <li><a href="#os4"><span class="n">4</span> fork, exec &amp; IPC</a></li>
+      </ol>
+    </div>
+
+    <div class="side-group">
+      <h3>Scheduling &amp; coordination</h3>
+      <ol>
+        <li><a href="#os5"><span class="n">5</span> CPU scheduling algorithms</a></li>
+        <li><a href="#os6"><span class="n">6</span> The critical-section problem</a></li>
+        <li><a href="#os7"><span class="n">7</span> Classic sync problems</a></li>
+        <li><a href="#os8"><span class="n">8</span> Deadlocks</a></li>
+      </ol>
+    </div>
+
+    <div class="side-group">
+      <h3>Memory &amp; storage</h3>
+      <ol>
+        <li><a href="#os9"><span class="n">9</span> Paging &amp; segmentation</a></li>
+        <li><a href="#os10"><span class="n">10</span> Virtual memory</a></li>
+        <li><a href="#os11"><span class="n">11</span> File systems &amp; disks</a></li>
+        <li><a href="#os12"><span class="n">12</span> I/O, and full circle</a></li>
+      </ol>
+    </div>
   </nav>
 
   <main>
@@ -538,7 +594,7 @@
       <div class="hero-content">
         <p class="kicker">A step-by-step curriculum</p>
         <h1 class="title">Threads, taught the way the machine actually works.</h1>
-        <p class="dek">Seventeen stops, each one building on the last: from what a thread physically is, through every synchronization primitive .NET gives you, to the thread pool and timers that manage them for you. No step assumes anything the previous one didn't teach.</p>
+        <p class="dek">Part One: seventeen stops through every synchronization primitive .NET gives you, from what a thread physically is to the thread pool and timers that manage them for you. Part Two goes one floor down — the operating system underneath, structured after <em>Operating System Concepts</em> — so every tool in Part One stops looking arbitrary and starts looking inevitable.</p>
 
         <div class="path-strip">
           <a href="#m1">Process → Thread</a>
@@ -1463,8 +1519,462 @@ timer.Change(dueTime: 0, period: 1500); <span class="c">// retune it later</span
       </ul>
     </section>
 
+    <div class="part-divider">
+      <span class="part-label">Part Two</span>
+      <h2 class="part-title">Now the machine underneath: Operating Systems</h2>
+      <p class="part-dek">Structured after Silberschatz, Galvin &amp; Gagne's <em>Operating System Concepts</em> — condensed to the load-bearing ideas that explain <em>why</em> every C# tool above behaves the way it does. The office-building metaphor scales up: if a process was a building, the OS is the city running underneath every building in town.</p>
+    </div>
+
+    <!-- OS-1 -->
+    <section class="module" id="os1">
+      <div class="m-eyebrow"><span class="m-num">1</span><span class="m-tag">OS Overview</span></div>
+      <h2 class="m-title">What an operating system actually does</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, introduced</span>
+          <p>If Part One's building was a process, the operating system is the city government running underneath every building in town — issuing permits, rationing power, and refereeing every dispute between tenants, whether or not any tenant ever notices it's there.</p>
+        </div>
+      </div>
+
+      <p>An operating system sits between your program and the physical hardware, and it earns its keep in two different ways at once. As a <strong>resource allocator</strong>, it referees competing demands for CPU time, memory, disk space, and devices among every running process — nobody gets to just take what they want. As an <strong>extended machine</strong>, it hides the genuinely unpleasant details of real hardware — the exact wire protocol for a disk controller, the register layout of a network card — behind a clean, uniform API: files, sockets, processes.</p>
+
+      <div class="compare">
+        <div class="card">
+          <h4>Resource allocator</h4>
+          <p>Decides who gets the CPU next, how much memory each process is allowed, which process's print job goes first. This is the referee.</p>
+        </div>
+        <div class="card">
+          <h4>Extended machine</h4>
+          <p>Turns "toggle pin 14 on the disk controller in this exact sequence" into <code class="inline">File.ReadAllText(path)</code>. This is the translator.</p>
+        </div>
+      </div>
+
+      <p>The <strong>kernel</strong> is the one part of the OS that's always resident in memory and always running with full hardware privilege — everything else (a shell, a file-manager GUI, a package manager) is just another user-mode program that happens to ship with the OS.</p>
+
+      <div class="callout lowlevel">
+        <span class="ico">λ</span>
+        <p>The very first kernel code to run does astonishingly little on purpose: initialize the CPU into a known state, set up an initial page table, get interrupts working, and hand off to a scheduler that starts running everything else. Almost everything you think of as "the operating system" — the file explorer, the settings app, even most device drivers — is user-mode code that talks to that tiny kernel core through the syscalls covered next.</p>
+      </div>
+    </section>
+
+    <!-- OS-2 -->
+    <section class="module" id="os2">
+      <div class="m-eyebrow"><span class="m-num">2</span><span class="m-tag">OS Overview</span></div>
+      <h2 class="m-title">Syscalls &amp; the boot sequence</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, continued</span>
+          <p>Every syscall is a citizen walking into city hall and filling out a form. You can't just wire your own house into the power grid — you file the request, city staff actually do the work, and you walk out with a receipt: the return value.</p>
+        </div>
+      </div>
+
+      <p>A <strong>system call</strong> is the only doorway from user mode into kernel mode. The library function you call (<code class="inline">read()</code>, <code class="inline">fork()</code>, .NET's <code class="inline">File.Open</code> underneath) is a thin wrapper that loads a syscall number into a register and executes a special <strong>trap</strong> instruction — deliberately triggering a controlled, well-defined jump into the kernel, rather than letting user code touch hardware directly.</p>
+
+      <table class="matrix">
+        <tr><th>Syscall</th><th>What it asks the kernel for</th></tr>
+        <tr><td><strong>fork()</strong></td><td>Duplicate the calling process (Module 4)</td></tr>
+        <tr><td><strong>exec()</strong></td><td>Replace this process's program image with another</td></tr>
+        <tr><td><strong>wait()</strong></td><td>Block until a child process terminates</td></tr>
+        <tr><td><strong>open() / read() / write()</strong></td><td>Touch a file through the filesystem, not the raw disk</td></tr>
+        <tr><td><strong>mmap()</strong></td><td>Map a file or fresh pages directly into this process's address space</td></tr>
+      </table>
+
+      <div class="viz" data-viz="syscall">
+        <div class="viz-head"><span class="viz-label">Mental model — the trap into the kernel</span><button class="viz-toggle" type="button">Pause</button></div>
+        <canvas></canvas>
+        <div class="viz-foot"><strong>IRL</strong> a bank teller window: you slide the form through the glass (trap), the teller — who can open the vault you can't — handles it, and slides a receipt back.</div>
+      </div>
+
+      <h3 class="m-sub">What actually happens between "power button" and "your code runs"</h3>
+      <p>Firmware (BIOS or UEFI) baked into a chip runs first and knows almost nothing except how to find a boot device. It loads a small <strong>bootloader</strong> (GRUB, Windows Boot Manager), which in turn loads the real kernel into memory and jumps to it. The kernel initializes drivers, mounts the root filesystem, and starts exactly one user-space process — <code class="inline">init</code>/<code class="inline">systemd</code> on Linux, roughly <code class="inline">wininit.exe</code> on Windows — which then spawns every other process on the system, directly or indirectly, using the very <code class="inline">fork()</code>/<code class="inline">CreateProcess</code> mechanics covered in Module 4.</p>
+    </section>
+
+    <!-- OS-3 -->
+    <section class="module" id="os3">
+      <div class="m-eyebrow"><span class="m-num">3</span><span class="m-tag">Process Management</span></div>
+      <h2 class="m-title">The process &amp; its states</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, continued</span>
+          <p>A process's status board only ever shows one of five words: <em>New</em> (paperwork's being filed), <em>Ready</em> (badge printed, waiting for a free desk), <em>Running</em> (at the desk, actually working), <em>Waiting</em> (stepped out for a delivery and can't continue without it), or <em>Terminated</em> (badge handed back, gone for good).</p>
+        </div>
+      </div>
+
+      <p>A <strong>program</strong> is inert — a file sitting on disk. A <strong>process</strong> is that program actually loaded into memory, given its own address space, and put on the OS's books. The kernel tracks every process through a <strong>Process Control Block (PCB)</strong>: process ID, current state, saved CPU registers and program counter, scheduling priority, memory-management info, and open-file/I/O status. This is, concretely, the "bookmark" from Part One's context-switch module — the PCB <em>is</em> what gets saved and restored on every switch.</p>
+
+      <div class="viz" data-viz="pcbstates">
+        <div class="viz-head"><span class="viz-label">Mental model — the five-state lifecycle</span><button class="viz-toggle" type="button">Pause</button></div>
+        <canvas></canvas>
+        <div class="viz-foot"><strong>IRL</strong> a hospital patient board: admitted, waiting for a bed, in surgery, recovering (waiting on something), discharged — and never any state besides those five.</div>
+      </div>
+
+      <div class="callout why">
+        <span class="ico">i</span>
+        <p>Part One's <code class="inline">Thread.ThreadState</code> (Module 2) is the managed-code window onto this exact same machine: <code class="inline">Running</code> and <code class="inline">WaitSleepJoin</code> are literally this diagram's <em>Running</em> and <em>Waiting</em>, one level of abstraction up.</p>
+      </div>
+    </section>
+
+    <!-- OS-4 -->
+    <section class="module" id="os4">
+      <div class="m-eyebrow"><span class="m-num">4</span><span class="m-tag">Process Management</span></div>
+      <h2 class="m-title">Creating processes: fork, exec &amp; IPC</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, continued</span>
+          <p><code class="inline">fork()</code> is a building manager instantly photocopying the entire office — every desk, every filing cabinet, down to the coffee mug mid-sip — except the copy insists it's the original, and only a note in its own hand (the return value) tells it otherwise.</p>
+        </div>
+      </div>
+
+      <p>On Unix-family systems, <code class="inline">fork()</code> creates a near-identical duplicate of the calling process — same code, same data, same open files — and both processes resume running from the exact instruction right after the call. The only difference either can observe is the return value: <code class="inline">0</code> in the child, the child's process ID in the parent. <code class="inline">exec()</code> then typically replaces the calling process's entire program image with a different one, keeping the same process ID — the classic fork-then-exec pattern every Unix shell uses to launch a program.</p>
+
+      <pre><code>pid_t pid = fork();
+<span class="kw">if</span> (pid == 0) {
+    execlp(<span class="str">"/bin/ls"</span>, <span class="str">"ls"</span>, NULL);  <span class="c">// the child becomes `ls`</span>
+} <span class="kw">else</span> {
+    wait(NULL);                       <span class="c">// the parent blocks until the child exits</span>
+    printf(<span class="str">"child finished\n"</span>);
+}</code></pre>
+
+      <h3 class="m-sub">Talking across the process boundary</h3>
+      <p>Two processes have separate address spaces by design — that's the entire point of a process boundary. So the moment they need to cooperate, they need an explicit channel:</p>
+      <div class="compare">
+        <div class="card">
+          <h4>Shared memory</h4>
+          <p>Fast — both processes map the same physical pages. But now you're right back to needing synchronization, just across a process boundary instead of a thread boundary: Modules 4–9's rules all apply again.</p>
+        </div>
+        <div class="card">
+          <h4>Message passing</h4>
+          <p>Slower, but the kernel enforces isolation for you — pipes, sockets. Part One's named <code class="inline">Mutex</code> (Module 5) exists specifically because it's a kernel-tracked object reachable from either side of exactly this boundary.</p>
+        </div>
+      </div>
+
+      <div class="callout wild">
+        <span class="ico">◆</span>
+        <div class="body">
+          <span class="tag">Real bug — the fork bomb</span>
+          <p>Unbounded process creation is a classic, genuinely dangerous denial-of-service — a single line that's famous precisely because it's so short:</p>
+          <pre><code>:(){ :|:& };:</code></pre>
+          <p>This defines a shell function <code class="inline">:</code> that calls itself twice, in the background, forever — each call doubling the number of running processes almost instantly, exhausting the OS's process table and memory until the machine stops responding. It's exactly why production systems set hard per-user process limits (<code class="inline">ulimit -u</code> on Linux, job objects on Windows) rather than trusting every process to self-regulate.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- OS-5 -->
+    <section class="module" id="os5">
+      <div class="m-eyebrow"><span class="m-num">5</span><span class="m-tag">Scheduling</span></div>
+      <h2 class="m-title">CPU scheduling algorithms</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, continued</span>
+          <p>One road leads downtown and every commuter wants it. Let cars through in arrival order? Let the shortest errands go first? Give VIPs a priority lane? Or hand everyone a fixed number of minutes on the road and rotate?</p>
+        </div>
+      </div>
+
+      <p>Scheduling is judged on several competing criteria at once: CPU utilization, throughput (jobs finished per unit time), turnaround time (arrival to completion), waiting time, and response time. No single algorithm wins on all of them — which is why there are several, each an explicit trade-off.</p>
+
+      <table class="matrix">
+        <tr><th>Algorithm</th><th>Idea</th><th>Weak point</th></tr>
+        <tr><td><strong>FCFS</strong></td><td>First-Come, First-Served — simplest possible queue</td><td>The "convoy effect": one long job at the front stalls everyone behind it</td></tr>
+        <tr><td><strong>SJF</strong></td><td>Shortest-Job-First — provably optimal average waiting time</td><td>Requires knowing burst length in advance — usually only estimable</td></tr>
+        <tr><td><strong>Priority</strong></td><td>Highest-priority runnable job goes first</td><td>Low-priority jobs can starve — fixed with "aging" (priority rises the longer you wait)</td></tr>
+        <tr><td><strong>Round Robin</strong></td><td>Fixed time quantum, then back of the queue</td><td>Quantum too big → behaves like FCFS; too small → wasted on context-switch overhead</td></tr>
+      </table>
+
+      <div class="viz" data-viz="gantt">
+        <div class="viz-head"><span class="viz-label">Mental model — the same jobs, two policies</span><button class="viz-toggle" type="button">Pause</button></div>
+        <canvas></canvas>
+        <div class="viz-foot"><strong>IRL</strong> FCFS is a single checkout line; Round Robin is a barista who gives every order exactly 90 seconds of attention before moving to the next one, looping back if it's not done.</div>
+      </div>
+
+      <div class="callout lowlevel">
+        <span class="ico">λ</span>
+        <p>No mainstream general-purpose OS runs any single textbook algorithm verbatim. Linux's <strong>CFS</strong> (Completely Fair Scheduler) tracks each runnable task's accumulated "virtual runtime" in a red-black tree and always picks the one that's run least — a continuous approximation of fairness, not a fixed quantum. Windows uses a priority-based scheduler with dynamically boosted priorities (a thread that just came off an I/O wait gets a temporary bump) layered under a base-priority Round Robin. Both are real-world elaborations on exactly the ideas in the table above.</p>
+      </div>
+    </section>
+
+    <!-- OS-6 -->
+    <section class="module" id="os6">
+      <div class="m-eyebrow"><span class="m-num">6</span><span class="m-tag">Coordination</span></div>
+      <h2 class="m-title">The critical-section problem, formalized</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, continued</span>
+          <p>Part One handed you a single office key without ever writing down the rules that make it work. This is the actual rulebook the city enforces on every key system in town.</p>
+        </div>
+      </div>
+
+      <p>A valid solution to letting <em>n</em> processes take turns in a shared critical section must satisfy three properties simultaneously, and it's worth naming all three because most broken attempts quietly fail just one:</p>
+      <ol class="reg">
+        <li><strong>Mutual exclusion</strong> — no two processes are ever inside their critical section at once.</li>
+        <li><strong>Progress</strong> — if nobody's inside, and some processes want in, that decision can't be postponed forever by processes that aren't even trying to enter.</li>
+        <li><strong>Bounded waiting</strong> — there's a limit on how many times other processes can cut ahead of one that's already waiting. No permanent starvation.</li>
+      </ol>
+
+      <p><strong>Peterson's Algorithm</strong> is the classic proof that pure software — no special hardware instruction — can solve this for two processes, using just a shared <code class="inline">turn</code> variable and a two-element <code class="inline">flag[]</code> array:</p>
+      <pre><code><span class="kw">bool</span>[] flag = { <span class="kw">false</span>, <span class="kw">false</span> };
+<span class="kw">int</span> turn;
+
+<span class="c">// process i (the other process is j)</span>
+flag[i] = <span class="kw">true</span>;
+turn = j;                                  <span class="c">// "after you"</span>
+<span class="kw">while</span> (flag[j] && turn == j) { }        <span class="c">// spin until it's actually my turn</span>
+
+<span class="c">/* critical section */</span>
+
+flag[i] = <span class="kw">false</span>;                          <span class="c">// release</span></code></pre>
+
+      <div class="callout gotcha">
+        <span class="ico">!</span>
+        <p>Peterson's algorithm is a beautiful teaching tool and essentially never runs in real production code today: it doesn't generalize past two threads without real complexity (Lamport's Bakery Algorithm extends the same idea to <em>n</em>), and it silently assumes sequentially consistent memory — exactly the guarantee Part One's Module 10 explained the hardware doesn't give you for free. On a modern CPU with a relaxed memory model, this code needs a memory barrier to actually be correct.</p>
+      </div>
+
+      <p>Real systems instead lean on a hardware atomic instruction — <strong>test-and-set</strong> or <strong>compare-and-swap</strong> — that the CPU itself guarantees is indivisible. This is precisely the <code class="inline">LOCK CMPXCHG</code> instruction from Part One's Interlocked module: compare-and-swap isn't a C# invention, it's a hardware primitive that the OS, the CLR, and every other language runtime all build their locking on top of.</p>
+    </section>
+
+    <!-- OS-7 -->
+    <section class="module" id="os7">
+      <div class="m-eyebrow"><span class="m-num">7</span><span class="m-tag">Coordination</span></div>
+      <h2 class="m-title">Classic synchronization problems</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, continued</span>
+          <p>Three scenarios every OS textbook uses for a reason — they show up, in disguise, in almost every real concurrent system you'll ever touch.</p>
+        </div>
+      </div>
+
+      <div class="compare">
+        <div class="card">
+          <h4>Bounded-buffer</h4>
+          <p>Producers fill a fixed-size buffer, consumers drain it, using two semaphores (empty slots, full slots) plus a mutex. This is Module 6's <code class="inline">SemaphoreSlim</code> pattern with a name and a job — <code class="inline">System.Threading.Channels</code> is essentially a well-engineered bounded buffer.</p>
+        </div>
+        <div class="card">
+          <h4>Readers–writers</h4>
+          <p>Module 7's <code class="inline">ReaderWriterLockSlim</code>, under its textbook name — with a real trade-off attached: a naive readers-preferred solution can starve writers indefinitely if readers keep arriving.</p>
+        </div>
+      </div>
+
+      <p><strong>Dining philosophers:</strong> five philosophers sit around a circular table with one fork between each adjacent pair — five forks total. Each philosopher needs <em>both</em> neighboring forks to eat. If all five simultaneously pick up the fork on their left, every fork is now held, and every philosopher is stuck waiting for a fork their neighbor is holding. Nobody can ever eat again.</p>
+
+      <div class="viz" data-viz="philosophers">
+        <div class="viz-head"><span class="viz-label">Mental model — five philosophers, five forks</span><button class="viz-toggle" type="button">Pause</button></div>
+        <canvas></canvas>
+        <div class="viz-foot"><strong>IRL</strong> a round dinner table with one fork per gap — if every guest grabs the fork on their left at the same instant, nobody can ever pick up a second.</div>
+      </div>
+
+      <p>This isn't a puzzle for its own sake — it's a perfectly staged instance of the deadlock covered next, small enough to see the whole cycle at once.</p>
+    </section>
+
+    <!-- OS-8 -->
+    <section class="module" id="os8">
+      <div class="m-eyebrow"><span class="m-num">8</span><span class="m-tag">Coordination</span></div>
+      <h2 class="m-title">Deadlocks</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, continued</span>
+          <p>Four things all have to be true at once for a real deadlock, not just a slow afternoon — and once your city meets all four, no amount of patience unsticks it on its own.</p>
+        </div>
+      </div>
+
+      <p>Four <strong>necessary conditions</strong> (Coffman's conditions) must hold <em>simultaneously</em> for deadlock — break any single one and deadlock becomes impossible:</p>
+      <ul class="checklist">
+        <li><strong>Mutual exclusion</strong> — at least one resource is held non-shareably.</li>
+        <li><strong>Hold and wait</strong> — a process holds one resource while waiting for another.</li>
+        <li><strong>No preemption</strong> — a resource can't be forcibly taken back; it must be released voluntarily.</li>
+        <li><strong>Circular wait</strong> — a cycle of processes, each waiting on a resource the next one holds.</li>
+      </ul>
+
+      <div class="viz" data-viz="reslocked">
+        <div class="viz-head"><span class="viz-label">Mental model — the resource-allocation graph</span><button class="viz-toggle" type="button">Pause</button></div>
+        <canvas></canvas>
+        <div class="viz-foot"><strong>IRL</strong> two neighbors each borrowing one tool the other needs to finish their own job — both waiting on the other to finish first, forever.</div>
+      </div>
+
+      <div class="callout why">
+        <span class="ico">i</span>
+        <p>You already met this exact scenario in Part One's Module 4 "real bug" callout — two locks acquired in opposite order. That C# code and the graph above are the same deadlock, drawn two different ways: a cycle in the resource-allocation graph is necessary for deadlock, and — with single-instance resources — sufficient.</p>
+      </div>
+
+      <p>Four honest strategies exist, in roughly increasing order of how much they cost you elsewhere:</p>
+      <table class="matrix">
+        <tr><th>Strategy</th><th>Approach</th></tr>
+        <tr><td><strong>Prevention</strong></td><td>Structurally deny one of the four conditions — e.g. require requesting all resources upfront</td></tr>
+        <tr><td><strong>Avoidance</strong></td><td>The Banker's Algorithm: only grant a request if the resulting state is still "safe" — some order still lets every process finish</td></tr>
+        <tr><td><strong>Detection &amp; recovery</strong></td><td>Let it happen, periodically scan the resource graph for a cycle, then kill or preempt to break it</td></tr>
+        <tr><td><strong>Ostrich algorithm</strong></td><td>Ignore the problem and reboot if it ever actually occurs</td></tr>
+      </table>
+      <div class="callout gotcha">
+        <span class="ico">!</span>
+        <p>Most general-purpose operating systems genuinely run the "ostrich algorithm" for most resources — prevention and avoidance are expensive and deadlocks are rare in well-written code, so paying for a Banker's-Algorithm-style check on every allocation almost never pencils out. The one universal, nearly-free mitigation that <em>is</em> used everywhere: enforce a consistent lock-acquisition order, which is exactly what breaks the "circular wait" condition for free.</p>
+      </div>
+    </section>
+
+    <!-- OS-9 -->
+    <section class="module" id="os9">
+      <div class="m-eyebrow"><span class="m-num">9</span><span class="m-tag">Memory</span></div>
+      <h2 class="m-title">Memory management: addresses, paging &amp; segmentation</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, continued</span>
+          <p>Every process believes it owns the whole building, address 0 upward — the city just never mentions that its "building" is actually a patchwork of unrelated rooms scattered across town, invisibly stitched together by a lookup table nobody outside city hall ever sees.</p>
+        </div>
+      </div>
+
+      <p>The CPU generates <strong>logical (virtual) addresses</strong>; a piece of hardware called the <strong>Memory Management Unit (MMU)</strong> translates every single one into a <strong>physical address</strong> before it ever touches real RAM — transparently, on every access, with no way for your code to opt out.</p>
+
+      <p>The simplest scheme — base and limit registers, one contiguous chunk per process — is easy to reason about but fragments badly: free memory ends up scattered in slivers too small individually to satisfy the next request (<strong>external fragmentation</strong>). <strong>Paging</strong> fixes this by dividing logical address space into fixed-size <em>pages</em> and physical memory into same-size <em>frames</em>, connected by a <strong>page table</strong>. A logical address splits cleanly into a page number (which row of the table to look up) and an offset (left untouched — it's the same in both addresses).</p>
+
+      <div class="viz" data-viz="paging">
+        <div class="viz-head"><span class="viz-label">Mental model — translating an address</span><button class="viz-toggle" type="button">Pause</button></div>
+        <canvas></canvas>
+        <div class="viz-foot"><strong>IRL</strong> a hotel's front desk: your room number ("page 4") never matches the physical room's location in the building ("frame 11") — the desk's lookup card is the only thing connecting the two.</div>
+      </div>
+
+      <div class="callout lowlevel">
+        <span class="ico">λ</span>
+        <p>Walking the full page table on every memory access would mean every reference costs two real memory accesses instead of one. The <strong>TLB (Translation Look-aside Buffer)</strong> is a small, extremely fast cache of recent page-number → frame-number translations sitting right next to the CPU core — a TLB hit skips the table walk entirely, and TLB hit rate is one of the single biggest levers on real-world memory performance.</p>
+      </div>
+
+      <div class="callout wild">
+        <span class="ico">◆</span>
+        <div class="body">
+          <span class="tag">Where this shows up — segmentation faults</span>
+          <p>The name "segmentation fault" comes directly from this chapter: it's the MMU refusing an access to a logical address that doesn't map to anything valid in the current page table. The managed .NET runtime shields you from this almost everywhere — but drop into <code class="inline">unsafe</code> code, raw pointers, or a P/Invoke call into native memory, and this exact OS-level fault (an access violation, on Windows) is what you're looking at underneath the CLR's own bounds-checking.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- OS-10 -->
+    <section class="module" id="os10">
+      <div class="m-eyebrow"><span class="m-num">10</span><span class="m-tag">Memory</span></div>
+      <h2 class="m-title">Virtual memory: demand paging &amp; replacement</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, continued</span>
+          <p>The city doesn't actually build every room in your requested office until the day you first walk into it — and if downtown gets too crowded, it quietly moves whichever room you've visited least recently out to a warehouse across town, bringing it back only if you come looking for it again.</p>
+        </div>
+      </div>
+
+      <p><strong>Demand paging</strong> loads a page into physical memory only on first reference — a <strong>page fault</strong> — rather than all at once at process start. This is what lets a process's logical address space be far larger than physical RAM actually installed. When memory's full and a new page needs to come in, something resident has to be evicted, and which one you pick matters enormously:</p>
+
+      <table class="matrix">
+        <tr><th>Algorithm</th><th>Evicts</th><th>Reality check</th></tr>
+        <tr><td><strong>FIFO</strong></td><td>Whichever page arrived first</td><td>Simple, but can suffer <strong>Belady's Anomaly</strong> — adding more frames can, counterintuitively, cause <em>more</em> faults</td></tr>
+        <tr><td><strong>Optimal</strong></td><td>Whichever page won't be needed for the longest time</td><td>Provably the best possible — and requires knowing the future, so it's a benchmark, not an implementation</td></tr>
+        <tr><td><strong>LRU</strong></td><td>Whichever page was used longest ago</td><td>A strong, practical approximation of Optimal; real systems approximate <em>this</em> via a cheaper "clock"/second-chance scheme</td></tr>
+      </table>
+
+      <div class="viz" data-viz="pagereplace">
+        <div class="viz-head"><span class="viz-label">Mental model — 3 frames, a stream of requests, FIFO</span><button class="viz-toggle" type="button">Pause</button></div>
+        <canvas></canvas>
+        <div class="viz-foot"><strong>IRL</strong> a small desk with room for 3 open folders — pull a 4th, and whichever folder's been sitting there longest gets refiled to make room, whether or not you're about to need it again.</div>
+      </div>
+
+      <div class="callout gotcha">
+        <span class="ico">!</span>
+        <p><strong>Thrashing</strong> is this module's most counterintuitive result: when a process — or the whole system — spends more time paging pages in and out than doing actual work, adding <em>more</em> concurrently running processes makes CPU utilization go <em>down</em>, not up, because everyone's mostly waiting on the disk. It's the reason a system can go from responsive to frozen with no single obvious culprit — just too many processes' working sets no longer fitting in RAM at once.</p>
+      </div>
+    </section>
+
+    <!-- OS-11 -->
+    <section class="module" id="os11">
+      <div class="m-eyebrow"><span class="m-num">11</span><span class="m-tag">Storage</span></div>
+      <h2 class="m-title">File systems &amp; disk scheduling</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, continued</span>
+          <p>If RAM is every desk currently in use, disk is the city's permanent public archive — and file allocation is just deciding whether a document's pages sit together on one shelf, are threaded together with sticky notes scattered across many shelves, or are indexed by one card catalog that knows exactly where every page lives.</p>
+        </div>
+      </div>
+
+      <div class="compare">
+        <div class="card">
+          <h4>Contiguous</h4>
+          <p>One unbroken run of blocks. Fast sequential <em>and</em> random access, but the same external-fragmentation problem as OS-9's contiguous memory, and files can't grow easily in place.</p>
+        </div>
+        <div class="card">
+          <h4>Linked</h4>
+          <p>Each block points to the next. No external fragmentation and files grow freely, but random access means walking the whole chain, and one corrupted pointer breaks everything downstream.</p>
+        </div>
+      </div>
+      <p>Most real filesystems (ext4, NTFS, APFS) use some evolved form of a third option — <strong>indexed allocation</strong>, where a dedicated index block holds every pointer for a file (essentially what a Unix <em>inode</em> is): good random access, modest per-file overhead, no chain-walking.</p>
+
+      <h3 class="m-sub">Disk scheduling — because the arm has to physically move</h3>
+      <p>On a mechanical hard disk, seek time — physically moving the read/write arm to the right cylinder — dwarfs everything else about servicing a request, so the <em>order</em> you service pending requests in matters enormously.</p>
+      <div class="viz" data-viz="diskarm">
+        <div class="viz-head"><span class="viz-label">Mental model — SCAN, "the elevator algorithm"</span><button class="viz-toggle" type="button">Pause</button></div>
+        <canvas></canvas>
+        <div class="viz-foot"><strong>IRL</strong> a building elevator: it doesn't teleport to whoever pressed the button first — it sweeps in one direction, picking up everyone along the way, then reverses.</div>
+      </div>
+      <p>FCFS services requests in arrival order and can send the arm thrashing across the whole disk; SSTF always jumps to the physically closest pending request, which risks starving anything far from the current hot zone; SCAN sweeps across the disk in one direction servicing everything in its path, then reverses — bounded worst-case wait, no starvation, the standard real-world compromise.</p>
+
+      <div class="callout lowlevel">
+        <span class="ico">λ</span>
+        <p>On a modern SSD, essentially none of this seek-time reasoning applies — there's no physical arm, and access time is roughly uniform regardless of address. That's exactly why SSD-aware I/O schedulers (Linux's <code class="inline">mq-deadline</code>, or simply <code class="inline">none</code>) exist as a genuinely simpler answer to the same question — the theory above still explains spinning disks perfectly; production just diverges once the hardware assumption it's built on stops holding.</p>
+      </div>
+    </section>
+
+    <!-- OS-12 -->
+    <section class="module" id="os12">
+      <div class="m-eyebrow"><span class="m-num">12</span><span class="m-tag">Full circle</span></div>
+      <h2 class="m-title">I/O, and back to where Part One started</h2>
+
+      <p>Three ways the CPU can find out a device is done, in increasing order of how little of the CPU's time they waste:</p>
+      <table class="matrix">
+        <tr><th>Strategy</th><th>How it works</th></tr>
+        <tr><td><strong>Polling</strong></td><td>The CPU repeatedly asks the device "are you done yet?" — this is <em>literally</em> Part One's Module 8 spin-wait, one layer down in hardware.</td></tr>
+        <tr><td><strong>Interrupts</strong></td><td>The device signals the CPU only when it's actually ready, freeing the CPU to do other work in between — this is <em>literally</em> Part One's Module 8 blocking wait.</td></tr>
+        <tr><td><strong>DMA</strong></td><td>For large transfers, the device writes straight into memory itself and interrupts the CPU only once, at the very end — no per-byte babysitting.</td></tr>
+      </table>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The city, one last time</span>
+          <p>Every tool from Part One was always a citizen of this city — you were just meeting it through the office building's front door first. Here's the same skyline, seen from street level.</p>
+        </div>
+      </div>
+
+      <div class="matrix-wrap">
+        <table class="bridge-table">
+          <tr><th>Part One (C#)</th><th>Part Two (OS)</th></tr>
+          <tr><td class="c1">Thread.Start()</td><td class="c2">the fork() / CreateProcess() syscall — OS-4</td></tr>
+          <tr><td class="c1">Monitor's thin lock vs. a kernel wait object</td><td class="c2">user mode vs. kernel mode — OS-2</td></tr>
+          <tr><td class="c1">Interlocked.Increment</td><td class="c2">the compare-and-swap hardware instruction — OS-6</td></tr>
+          <tr><td class="c1">ThreadPool's auto-scaling</td><td class="c2">a scheduling policy, same genus as OS-5's algorithms</td></tr>
+          <tr><td class="c1">SemaphoreSlim</td><td class="c2">the bounded-buffer producer–consumer semaphores — OS-7</td></tr>
+          <tr><td class="c1">The lock-ordering deadlock (Module 4)</td><td class="c2">a cycle in the resource-allocation graph — OS-8</td></tr>
+          <tr><td class="c1">ThreadLocal&lt;T&gt;</td><td class="c2">a process's own address space — OS-9, at thread granularity</td></tr>
+          <tr><td class="c1">Spinning vs. blocking (Module 8)</td><td class="c2">polling vs. interrupts, restated above</td></tr>
+        </table>
+      </div>
+
+      <p>None of Part One was ever really about C#. <code class="inline">System.Threading</code> is a thin, well-designed managed wrapper around exactly the machine Part Two just described — which is why understanding the machine makes every one of those tools stop feeling like arbitrary API surface and start feeling like the only sensible shape they could have had.</p>
+    </section>
+
     <footer>
-      A ground-up path through <code class="inline">System.Threading</code> — every primitive shown does exactly what its section says, nothing more, so the next section can build on it without surprises.
+      A ground-up path through <code class="inline">System.Threading</code>, and the operating system underneath it — every primitive shown does exactly what its section says, nothing more, so the next section can build on it without surprises.
     </footer>
   </main>
 </div>
@@ -1898,6 +2408,288 @@ timer.Change(dueTime: 0, period: 1500); <span class="c">// retune it later</span
     });
     ctx.fillStyle=C.accent2;
     ctx.beginPath(); ctx.arc(lerp(x0,x1,lt/loop),trackY,5,0,7); ctx.fill();
+  };
+
+  registry.syscall = function(ctx,w,h,t,C){
+    ctx.clearRect(0,0,w,h);
+    var midx=w/2;
+    ctx.fillStyle='rgba(255,255,255,.04)'; ctx.fillRect(0,20,midx-1,h-40);
+    ctx.fillStyle='rgba(232,163,61,.05)'; ctx.fillRect(midx+1,20,w-midx-1,h-40);
+    label(ctx,'USER MODE',midx/2,16,C.accent2,'center',FONT_SM);
+    label(ctx,'KERNEL MODE',midx+(w-midx)/2,16,C.accent,'center',FONT_SM);
+    ctx.setLineDash([4,4]); ctx.strokeStyle=C.faint;
+    ctx.beginPath(); ctx.moveTo(midx,24); ctx.lineTo(midx,h-16); ctx.stroke(); ctx.setLineDash([]);
+
+    var period=2.2, p=(t%period)/period, x, y=h/2, inKernel;
+    if(p<0.35){ x=lerp(30,midx,p/0.35); inKernel=false; }
+    else if(p<0.55){ x=midx; inKernel=true; }
+    else if(p<0.85){ x=lerp(midx,w-30,(p-0.55)/0.3); inKernel=true; }
+    else { x=lerp(w-30,30,(p-0.85)/0.15); inKernel=false; }
+    ctx.fillStyle = inKernel?C.accent:C.accent2;
+    ctx.beginPath(); ctx.arc(x,y,7,0,7); ctx.fill();
+    label(ctx, inKernel?'handling trap':'user code', x, y-16, inKernel?C.accent:C.accent2,'center',FONT_SM);
+    if(p>=0.35 && p<0.55) label(ctx,'trap →',midx-4,y,C.text,'right',FONT_SM);
+  };
+
+  registry.pcbstates = function(ctx,w,h,t,C){
+    ctx.clearRect(0,0,w,h);
+    var nodes = {
+      New:{x:36,y:h/2}, Ready:{x:150,y:36}, Running:{x:268,y:h/2},
+      Waiting:{x:150,y:h-30}, Terminated:{x:w-40,y:h/2}
+    };
+    var edges = [['New','Ready'],['Ready','Running'],['Running','Waiting'],['Waiting','Ready'],['Running','Terminated']];
+    ctx.strokeStyle='rgba(255,255,255,.15)';
+    edges.forEach(function(e){
+      var a=nodes[e[0]], b=nodes[e[1]];
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    });
+    Object.keys(nodes).forEach(function(k){
+      var n=nodes[k];
+      ctx.fillStyle='rgba(255,255,255,.05)'; ctx.strokeStyle=C.border;
+      ctx.beginPath(); ctx.arc(n.x,n.y,26,0,7); ctx.fill(); ctx.stroke();
+      label(ctx,k,n.x,n.y,C.dim,'center',FONT_SM);
+    });
+    var seq=['New','Ready','Running','Waiting','Ready','Running','Terminated'];
+    var stepDur=0.9, total=seq.length*stepDur, lt=t%total;
+    var idx=Math.floor(lt/stepDur), frac=(lt%stepDur)/stepDur;
+    idx=Math.min(idx, seq.length-2);
+    var a=nodes[seq[idx]], b=nodes[seq[idx+1]];
+    var x=lerp(a.x,b.x,frac), y=lerp(a.y,b.y,frac);
+    ctx.fillStyle=C.accent;
+    ctx.beginPath(); ctx.arc(x,y,7,0,7); ctx.fill();
+    var cur = nodes[seq[Math.min(idx+ (frac>0.5?1:0), seq.length-1)]];
+    ctx.strokeStyle=C.accent; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(cur.x,cur.y,29,0,7); ctx.stroke(); ctx.lineWidth=1;
+  };
+
+  registry.gantt = (function(){
+    var jobs=[{n:'P1',dur:0.8},{n:'P2',dur:0.3},{n:'P3',dur:0.5},{n:'P4',dur:0.4}];
+    var colors4=['accent','accent2','danger','faint'];
+    function fcfsSchedule(){
+      var t=0, out=[];
+      jobs.forEach(function(j,i){ out.push({n:j.n,start:t,end:t+j.dur,idx:i}); t+=j.dur; });
+      return {segs:out, total:t};
+    }
+    function rrSchedule(q){
+      var remaining=jobs.map(function(j){return j.dur;});
+      var t=0, out=[], guard=0;
+      while(remaining.some(function(r){return r>0.001;}) && guard<200){
+        for(var i=0;i<jobs.length;i++){
+          if(remaining[i]<=0.001) continue;
+          var slice=Math.min(q, remaining[i]);
+          out.push({n:jobs[i].n, start:t, end:t+slice, idx:i});
+          t+=slice; remaining[i]-=slice; guard++;
+        }
+      }
+      return {segs:out, total:t};
+    }
+    var fc=fcfsSchedule(), rr=rrSchedule(0.25);
+    return function(ctx,w,h,t,C){
+      ctx.clearRect(0,0,w,h);
+      var colorOf=function(i){ return C[colors4[i]]; };
+      var x0=70, x1=w-20;
+      function drawRow(sched, y, label_, loopLen){
+        label(ctx,label_,14,y-14,C.faint,'left',FONT_SM);
+        var scale=(x1-x0)/sched.total;
+        var lt=t%loopLen;
+        sched.segs.forEach(function(s){
+          var sx=x0+s.start*scale, sw=(s.end-s.start)*scale;
+          var active = lt>=s.start && lt<s.end;
+          ctx.fillStyle = active? colorOf(s.idx) : 'rgba(255,255,255,.08)';
+          rr(ctx,sx,y,Math.max(sw-1,1),22,3); ctx.fill();
+          if(sw>16) label(ctx,s.n,sx+sw/2,y+11, active?C.bg:C.faint,'center',FONT_SM);
+        });
+        var cursorX = x0 + Math.min(lt,sched.total)*scale;
+        ctx.strokeStyle=C.text; ctx.beginPath(); ctx.moveTo(cursorX,y-4); ctx.lineTo(cursorX,y+26); ctx.stroke();
+      }
+      var loopLen = Math.max(fc.total, rr.total)+0.3;
+      drawRow(fc, 46, 'FCFS', loopLen);
+      drawRow(rr, 112, 'Round Robin (q=0.25)', loopLen);
+    };
+  })();
+
+  registry.philosophers = function(ctx,w,h,t,C){
+    ctx.clearRect(0,0,w,h);
+    var cx=w/2, cy=h/2+6, R=54;
+    var n=5, cycle=5.5, phase=(t%cycle)/cycle;
+    var stuck = phase<0.6;
+    var colors5=[C.accent,C.accent2,C.danger,C.faint,C.text];
+    var phi=[], forkTaken=[];
+    for(var i=0;i<n;i++){
+      var ang=-Math.PI/2 + i*(2*Math.PI/n);
+      phi.push({x:cx+Math.cos(ang)*R, y:cy+Math.sin(ang)*R});
+    }
+    var forks=[];
+    for(var i=0;i<n;i++){
+      var ang=-Math.PI/2 + (i+0.5)*(2*Math.PI/n);
+      forks.push({x:cx+Math.cos(ang)*(R*0.55), y:cy+Math.sin(ang)*(R*0.55)});
+    }
+    ctx.strokeStyle=C.border;
+    ctx.beginPath(); ctx.arc(cx,cy,R*0.3,0,7); ctx.stroke();
+    label(ctx, stuck?'everyone holds their left fork — stuck':'one philosopher yields — resolved', cx, 14, stuck?C.danger:C.accent,'center',FONT_SM);
+
+    for(var i=0;i<n;i++){
+      var takenLeft, takenRight=false;
+      if(stuck){
+        takenLeft = phase>0.12;
+      } else {
+        var local=(phase-0.6)/0.4;
+        if(i===0){ takenLeft=false; takenRight = local>0.2; }
+        else { takenLeft = local>0.1+i*0.05; takenRight = takenLeft && local>0.4+i*0.05; }
+      }
+      var fLeft = forks[i], fRight = forks[(i+n-1)%n];
+      ctx.fillStyle = takenLeft? colors5[i] : 'rgba(255,255,255,.15)';
+      ctx.beginPath(); ctx.arc(fLeft.x,fLeft.y,4,0,7); ctx.fill();
+      if(!stuck){
+        ctx.fillStyle = takenRight? colors5[i] : 'rgba(255,255,255,.15)';
+        ctx.beginPath(); ctx.arc(fRight.x,fRight.y,4,0,7); ctx.fill();
+      }
+    }
+    for(var i=0;i<n;i++){
+      var p=phi[i];
+      ctx.fillStyle=colors5[i];
+      ctx.beginPath(); ctx.arc(p.x,p.y,10,0,7); ctx.fill();
+      label(ctx,'P'+(i+1),p.x,p.y,C.bg,'center',FONT_SM);
+    }
+  };
+
+  registry.reslocked = function(ctx,w,h,t,C){
+    ctx.clearRect(0,0,w,h);
+    var period=4, lt=t%period;
+    var P1={x:60,y:40}, P2={x:w-60,y:h-40}, R1={x:w-60,y:40}, R2={x:60,y:h-40};
+    function node(n,text,isProc){
+      ctx.fillStyle= isProc? 'rgba(232,163,61,.15)' : 'rgba(255,255,255,.06)';
+      ctx.strokeStyle = isProc? C.accent : C.border;
+      if(isProc){ ctx.beginPath(); ctx.arc(n.x,n.y,20,0,7); ctx.fill(); ctx.stroke(); }
+      else { rr(ctx,n.x-20,n.y-16,40,32,6); ctx.fill(); ctx.stroke(); }
+      label(ctx,text,n.x,n.y,C.text,'center',FONT_SM);
+    }
+    function arrow(a,b,color,prog){
+      var x=lerp(a.x,b.x,prog), y=lerp(a.y,b.y,prog);
+      ctx.strokeStyle=color; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(x,y); ctx.stroke();
+      ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,3,0,7); ctx.fill();
+    }
+    var p1holds = clamp(lt/0.6, 0, 1);
+    var p2holds = clamp(lt/0.6, 0, 1);
+    var p1wants = clamp((lt-1.2)/0.6, 0, 1);
+    var p2wants = clamp((lt-1.2)/0.6, 0, 1);
+    var cycleDone = lt>2.4;
+    arrow(R1,P1, cycleDone?C.danger:C.accent2, p1holds);
+    arrow(R2,P2, cycleDone?C.danger:C.accent2, p2holds);
+    if(p1wants>0) arrow(P1,R2, cycleDone?C.danger:C.faint, p1wants);
+    if(p2wants>0) arrow(P2,R1, cycleDone?C.danger:C.faint, p2wants);
+    node(P1,'P1',true); node(P2,'P2',true);
+    node(R1,'R1',false); node(R2,'R2',false);
+    if(cycleDone) label(ctx,'circular wait — deadlock',w/2,h/2,C.danger,'center',FONT_SM);
+  };
+
+  registry.paging = function(ctx,w,h,t,C){
+    ctx.clearRect(0,0,w,h);
+    var table=[3,7,1,5], period=2.4;
+    var idx = Math.floor(t/period)%table.length, p=(t%period)/period;
+    label(ctx,'logical address',30,18,C.faint,'left',FONT_SM);
+    label(ctx,'page table',w/2-10,18,C.faint,'center',FONT_SM);
+    label(ctx,'physical memory',w-100,18,C.faint,'left',FONT_SM);
+
+    var addrY=70;
+    ctx.strokeStyle=C.border;
+    rr(ctx,20,addrY-16,44,32,5); ctx.stroke();
+    label(ctx,'p'+idx,42,addrY,C.text,'center',FONT_SM);
+    rr(ctx,68,addrY-16,44,32,5); ctx.stroke();
+    label(ctx,'off',90,addrY,C.faint,'center',FONT_SM);
+
+    var tblX=130, tblY=40, rowH=20;
+    table.forEach(function(frame,i){
+      ctx.strokeStyle= i===idx? C.accent : C.border;
+      ctx.fillStyle = i===idx? 'rgba(232,163,61,.12)' : 'transparent';
+      rr(ctx,tblX,tblY+i*rowH,60,rowH-3,4); if(i===idx) ctx.fill(); ctx.stroke();
+      label(ctx,'p'+i+' → f'+frame, tblX+30, tblY+i*rowH+8, i===idx?C.text:C.faint,'center',FONT_SM);
+    });
+
+    var frameX0=230, frameY=40, frameW=44, frameGap=8;
+    for(var f=0; f<8; f++){
+      var fx=frameX0+(f%4)*(frameW+frameGap), fy=frameY+Math.floor(f/4)*30;
+      var isTarget = f===table[idx];
+      ctx.strokeStyle= isTarget? C.accent2 : C.border;
+      ctx.fillStyle = isTarget? 'rgba(95,179,163,.18)' : 'rgba(255,255,255,.03)';
+      rr(ctx,fx,fy,frameW,24,4); ctx.fill(); ctx.stroke();
+      label(ctx,'f'+f,fx+frameW/2,fy+12,isTarget?C.text:C.faint,'center',FONT_SM);
+    }
+
+    var startX=112, startY=addrY, midX=tblX+30, midY=tblY+idx*rowH+8;
+    var endX=frameX0+(table[idx]%4)*(frameW+frameGap)+frameW/2, endY=frameY+Math.floor(table[idx]/4)*30+12;
+    ctx.strokeStyle=C.accent; ctx.setLineDash([3,3]);
+    if(p<0.5){
+      ctx.beginPath(); ctx.moveTo(startX,startY); ctx.lineTo(lerp(startX,midX,p*2), lerp(startY,midY,p*2)); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(startX,startY); ctx.lineTo(midX,midY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(midX,midY); ctx.lineTo(lerp(midX,endX,(p-0.5)*2), lerp(midY,endY,(p-0.5)*2)); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  };
+
+  registry.pagereplace = function(ctx,w,h,t,C){
+    ctx.clearRect(0,0,w,h);
+    var refs=[1,2,3,4,1,2,5,1,2,3,4,5];
+    var frames=[null,null,null];
+    var events=[];
+    var fifoPtr=0;
+    refs.forEach(function(r){
+      var hit = frames.indexOf(r)!==-1;
+      if(!hit){
+        var evictIdx = frames.indexOf(null);
+        if(evictIdx===-1){ evictIdx = fifoPtr%3; fifoPtr++; }
+        frames[evictIdx]=r;
+      }
+      events.push({r:r, hit:hit, frames:frames.slice()});
+    });
+    var stepDur=0.7, total=events.length*stepDur, lt=t%total;
+    var idx=Math.min(events.length-1, Math.floor(lt/stepDur));
+    var ev=events[idx];
+
+    label(ctx,'reference string',20,16,C.faint,'left',FONT_SM);
+    var x0=20, gap=26;
+    refs.forEach(function(r,i){
+      var active = i===idx;
+      var known = i<=idx;
+      ctx.fillStyle = active ? (ev.hit?C.accent2:C.danger) : (known? 'rgba(255,255,255,.1)' : 'rgba(255,255,255,.04)');
+      ctx.beginPath(); ctx.arc(x0+i*gap, 40, 9, 0, 7); ctx.fill();
+      label(ctx,String(r), x0+i*gap, 40, active?C.bg:C.dim,'center',FONT_SM);
+    });
+
+    label(ctx,'frames',20,76,C.faint,'left',FONT_SM);
+    for(var f=0; f<3; f++){
+      var val = ev.frames[f];
+      ctx.strokeStyle=C.border; ctx.fillStyle = val!=null?'rgba(255,255,255,.06)':'transparent';
+      rr(ctx,80+f*70,64,54,34,6); ctx.fill(); ctx.stroke();
+      label(ctx,val!=null?String(val):'—', 80+f*70+27, 81, C.text,'center',FONT);
+    }
+    label(ctx, ev.hit?'hit — already resident':'fault — page brought in, oldest evicted', 20, 122, ev.hit?C.accent2:C.danger,'left',FONT_SM);
+  };
+
+  registry.diskarm = function(ctx,w,h,t,C){
+    ctx.clearRect(0,0,w,h);
+    var queue=[40,170,90,10,150,60,190,20];
+    var x0=30, x1=w-30, trackY=70;
+    ctx.strokeStyle='rgba(255,255,255,.12)';
+    ctx.beginPath(); ctx.moveTo(x0,trackY); ctx.lineTo(x1,trackY); ctx.stroke();
+    label(ctx,'cylinder 0',x0,trackY+22,C.faint,'left',FONT_SM);
+    label(ctx,'cylinder 199',x1,trackY+22,C.faint,'right',FONT_SM);
+
+    var period=6, lt=t%period, sweep = lt<period/2 ? lt/(period/2) : 1-((lt-period/2)/(period/2));
+    var armCyl = sweep*199;
+    var armX = lerp(x0,x1, armCyl/199);
+
+    queue.forEach(function(q){
+      var qx=lerp(x0,x1,q/199);
+      ctx.fillStyle = Math.abs(q-armCyl)<4 ? C.accent : 'rgba(95,179,163,.5)';
+      ctx.beginPath(); ctx.arc(qx, trackY-14, 5, 0, 7); ctx.fill();
+    });
+
+    ctx.strokeStyle=C.accent; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(armX, trackY-24); ctx.lineTo(armX, trackY+10); ctx.stroke();
+    ctx.lineWidth=1;
+    label(ctx,'arm', armX, trackY-30, C.accent, 'center', FONT_SM);
   };
 
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
