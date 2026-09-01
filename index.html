@@ -407,6 +407,11 @@
   .callout.wild{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--danger);}
   .callout.wild .ico{background:var(--danger-soft); color:var(--danger); border:1px solid var(--border);}
 
+  .callout.metaphor{background:transparent; border:1px dashed var(--border); border-left:3px solid var(--accent-2);}
+  .callout.metaphor .ico{background:var(--accent-2-soft); color:var(--accent-2); border:1px solid var(--border); font-family:var(--serif); font-style:italic;}
+  .callout.metaphor .body .tag{color:var(--accent-2);}
+  .callout.metaphor p{font-family:var(--serif); font-style:italic; color:var(--text); font-size:.98rem; line-height:1.65;}
+
   @media (prefers-reduced-motion: reduce){
     .viz-toggle{display:none;}
   }
@@ -556,6 +561,15 @@
     <section class="module" id="m0">
       <div class="m-eyebrow"><span class="m-num">0</span><span class="m-tag">Foundations</span></div>
       <h2 class="m-title">Process, thread, sync, async</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The running metaphor — the office building</span>
+          <p>Think of a running program as an office building. The building itself is the process. Everyone working inside, moving around, doing tasks, is a thread. The building can't open with nobody in it — so the very first person through the door, whom nobody explicitly hired, becomes "the main thread." Every module from here on is really just: how do the people in this building get things done without tripping over each other.</p>
+        </div>
+      </div>
+
       <p>A running program is a <strong>process</strong> — memory the OS handed out, plus at least one <strong>thread</strong>: the actual sequence of instructions the CPU executes. A thread is the smallest unit of independent execution. Every .NET app starts with exactly one, the <strong>main thread</strong>, whether you ask for it or not. Anything you spin up yourself is a <strong>worker thread</strong>.</p>
       <p>A CPU core runs one instruction stream at a time. With more threads than cores, the OS slices time between them — pausing one mid-flight, resuming another — fast enough that it <em>looks</em> simultaneous. That illusion is why a thread needs a full picture of "where it stopped": registers, stack pointer, program counter. Think of it like a bookmark in a novel — put it down, someone else reads a page, you pick up exactly where you left off.</p>
       <h3 class="m-sub">Sync vs. async — a everyday distinction first</h3>
@@ -602,6 +616,15 @@
     <section class="module" id="mos">
       <div class="m-eyebrow"><span class="m-num">½</span><span class="m-tag">Foundations</span></div>
       <h2 class="m-title">Just enough operating system</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>The kernel is the building's facilities and security staff. Employees can rearrange their own desk however they like, but the moment they need something structural — a new office built (a thread), the front doors unlocked (a syscall) — they have to walk to the front desk, badge in, wait for staff to actually do it, and walk back. That round trip is never instant, and it's why some of this course's tools feel "heavier" than others.</p>
+        </div>
+      </div>
+
       <p>Operating systems are their own multi-semester subject — this isn't that. It's the small, load-bearing slice you actually lean on every time you touch <code class="inline">Thread</code>, and it's what makes the rest of this course click instead of feeling like memorized API trivia.</p>
 
       <h3 class="m-sub">Two privilege levels, one CPU</h3>
@@ -654,6 +677,15 @@
     <section class="module" id="m1">
       <div class="m-eyebrow"><span class="m-num">1</span><span class="m-tag">Foundations</span></div>
       <h2 class="m-title">The Thread class</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>Writing <code class="inline">new Thread(...)</code> is filling out a hire form — you've picked a desk and written the job description, but nobody's shown up yet. <code class="inline">.Start()</code> is the day they actually walk in and begin.</p>
+        </div>
+      </div>
+
       <p>Everything you need to create and control a worker thread lives in <code class="inline">System.Threading.Thread</code>. Give the constructor a <code class="inline">ThreadStart</code> delegate — any parameterless, void method — and call <code class="inline">.Start()</code>. Creating the object doesn't run anything; <code class="inline">Start()</code> is what makes it live.</p>
       <pre><code><span class="kw">var</span> worker = <span class="kw">new</span> <span class="ty">Thread</span>(() =>
 {
@@ -679,6 +711,15 @@ worker.Start();
     <section class="module" id="m2">
       <div class="m-eyebrow"><span class="m-num">2</span><span class="m-tag">Foundations</span></div>
       <h2 class="m-title">Identity &amp; lifecycle</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>Every employee gets an ID badge, for exactly this reason — telling people apart on the incident report. Mark someone a contractor (<code class="inline">IsBackground = true</code>) and they're let go the instant the building closes for the night, mid-task, no notice. Leave them full-time (the default), and the building stays open, lights on, until they clock out on their own.</p>
+        </div>
+      </div>
+
       <h3 class="m-sub">ManagedThreadId</h3>
       <p>Every thread gets an ID from the runtime, useful for logging, debugging, and telling threads apart in metrics. Read it with <code class="inline">Thread.CurrentThread.ManagedThreadId</code> — <code class="inline">AppDomain.GetCurrentThreadId()</code> still compiles but is deprecated; its IDs aren't stable.</p>
       <pre><code><span class="ty">Console</span>.WriteLine($<span class="str">"main thread id: {Thread.CurrentThread.ManagedThreadId}"</span>);</code></pre>
@@ -710,6 +751,15 @@ logger.Start();</code></pre>
     <section class="module" id="m3">
       <div class="m-eyebrow"><span class="m-num">3</span><span class="m-tag">Foundations</span></div>
       <h2 class="m-title">The race condition</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>Two coworkers sharing one whiteboard tally, both reading "12," both mentally computing "13," and both writing "13" back. One of their updates simply never happened — and neither of them will ever know, because the whiteboard doesn't remember who almost wrote what.</p>
+        </div>
+      </div>
+
       <p>A <strong>race condition</strong> is what happens when two or more threads touch the same resource — a variable, a collection, a file — at the same time, without coordination, and the outcome depends on timing instead of logic.</p>
       <p>Even something as small as <code class="inline">counter++</code> is really three steps: <strong>read</strong> the current value, <strong>compute</strong> the new one, <strong>write</strong> it back. If another thread sneaks in between steps one and three, its update can be silently overwritten.</p>
       <pre><code><span class="kw">int</span> counter = 0;
@@ -759,6 +809,15 @@ builder.Services.AddSingleton&lt;<span class="ty">RequestStatsService</span>&gt;
     <section class="module" id="m4">
       <div class="m-eyebrow"><span class="m-num">4</span><span class="m-tag">Blocking sync</span></div>
       <h2 class="m-title">lock &amp; Monitor</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>One office has one key on a single hook by the door. Whoever takes it works inside undisturbed; everyone else waits in the hallway until it's hung back up — no schedule, no assigned turns, just whoever gets there first holds it.</p>
+        </div>
+      </div>
+
       <p>The most direct fix: let only one thread into the risky code — the <strong>critical section</strong> — at a time. <code class="inline">lock</code> is C#'s shorthand for exactly that, built on <code class="inline">Monitor.Enter</code> / <code class="inline">Monitor.Exit</code> underneath.</p>
       <pre><code><span class="kw">readonly</span> <span class="kw">object</span> gate = <span class="kw">new</span>();
 <span class="kw">int</span> counter = 0;
@@ -826,6 +885,15 @@ builder.Services.AddSingleton&lt;<span class="ty">RequestStatsService</span>&gt;
     <section class="module" id="m5">
       <div class="m-eyebrow"><span class="m-num">5</span><span class="m-tag">Blocking sync</span></div>
       <h2 class="m-title">Mutex</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>Now picture two separate buildings across the street, sharing one loading-dock key on a chain. It doesn't matter which building's employee is holding it — the dock only opens for whoever has it. And precisely because it has to work across two buildings, that key gets registered with the city rather than just kept in someone's drawer.</p>
+        </div>
+      </div>
+
       <p><code class="inline">Mutex</code> ("mutual exclusion") solves the same problem as <code class="inline">lock</code>, but at the <strong>OS / process</strong> level rather than just within one process's threads — which is exactly what makes it heavier and what makes it uniquely useful.</p>
       <pre><code><span class="kw">using</span> <span class="kw">var</span> mutex = <span class="kw">new</span> <span class="ty">Mutex</span>();
 mutex.WaitOne();
@@ -860,6 +928,15 @@ mutex.WaitOne();
     <section class="module" id="m6">
       <div class="m-eyebrow"><span class="m-num">6</span><span class="m-tag">Blocking sync</span></div>
       <h2 class="m-title">Semaphore &amp; SemaphoreSlim</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>A conference room with exactly three chairs. The fourth person to show up doesn't get turned away for good — they just wait by the door until any one of the three currently inside stands up and leaves.</p>
+        </div>
+      </div>
+
       <p>A lock lets in exactly one thread. A <strong>semaphore</strong> lets in <em>N</em> — a permit count you choose, like a movie theater with a fixed number of seats. Threads call <code class="inline">WaitOne</code>/<code class="inline">Wait</code> to take a permit and <code class="inline">Release</code> to give it back; once permits run out, everyone else queues.</p>
       <pre><code><span class="kw">using</span> <span class="kw">var</span> sem = <span class="kw">new</span> <span class="ty">SemaphoreSlim</span>(initialCount: 2, maxCount: 2); <span class="c">// 2 seats</span>
 
@@ -903,6 +980,15 @@ mutex.WaitOne();
     <section class="module" id="m7">
       <div class="m-eyebrow"><span class="m-num">7</span><span class="m-tag">Blocking sync</span></div>
       <h2 class="m-title">ReaderWriterLockSlim</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>A shared bulletin board: any number of employees can read it at once without getting in each other's way. But the moment someone starts re-pinning notices, everyone else has to stand back — you can't safely read a board mid-shuffle.</p>
+        </div>
+      </div>
+
       <p>A plain lock treats every access the same — but reads and writes aren't the same risk. Many threads reading a value at once is perfectly safe; it's a <em>write</em> happening alongside anything else that's dangerous. <code class="inline">ReaderWriterLockSlim</code> encodes exactly that: unlimited concurrent readers, one exclusive writer, never both.</p>
       <pre><code><span class="kw">readonly</span> <span class="ty">ReaderWriterLockSlim</span> rw = <span class="kw">new</span>();
 <span class="kw">int</span> shared = 0;
@@ -936,6 +1022,15 @@ mutex.WaitOne();
     <section class="module" id="m8">
       <div class="m-eyebrow"><span class="m-num">8</span><span class="m-tag">Non-blocking</span></div>
       <h2 class="m-title">SpinLock &amp; SpinWait</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>One coworker stands at the copier, tapping the handle every second until it's free. Another just goes back to their desk and waits to be told. The tapper reacts the instant it opens; the one who left has to be found and told first — that's the whole trade-off.</p>
+        </div>
+      </div>
+
       <p>Every lock so far <strong>blocks</strong>: the OS parks the waiting thread to sleep and wakes it later, which costs real time. <strong>Spinning</strong> takes the opposite bet — the thread stays active, checking a condition in a tight loop, and grabs the resource the instant it's free. No OS involvement, no sleep/wake cost — but the CPU is burning cycles the whole time it waits.</p>
       <div class="compare">
         <div class="card">
@@ -983,6 +1078,15 @@ mutex.WaitOne();
     <section class="module" id="m9">
       <div class="m-eyebrow"><span class="m-num">9</span><span class="m-tag">Non-blocking</span></div>
       <h2 class="m-title">Interlocked</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>Instead of a whiteboard tally two people can misread mid-write, put a mechanical click-counter by the door. One motion, no way to catch it half-finished — there's no "in between" state for anyone to glimpse.</p>
+        </div>
+      </div>
+
       <p>Sometimes the "critical section" is one arithmetic operation on one variable — and locking for that is overkill. <code class="inline">Interlocked</code> makes simple operations <strong>atomic</strong>: indivisible from any other thread's point of view, with no lock object needed at all.</p>
       <pre><code><span class="kw">int</span> counter = 0;
 <span class="ty">Interlocked</span>.Increment(<span class="kw">ref</span> counter);
@@ -1012,6 +1116,15 @@ mutex.WaitOne();
     <section class="module" id="m10">
       <div class="m-eyebrow"><span class="m-num">10</span><span class="m-tag">Non-blocking</span></div>
       <h2 class="m-title">MemoryBarrier</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>An inter-office mail slot that guarantees letters arrive in the order they were dropped in. Without that guarantee, a fast note could technically overtake a slower one sent earlier — and the reader would have no way of knowing the order got scrambled.</p>
+        </div>
+      </div>
+
       <p>The compiler and CPU are both allowed to reorder instructions for speed — usually invisible, but occasionally a thread reads a stale value because a write from another thread hasn't "become visible" yet. <code class="inline">Thread.MemoryBarrier()</code> plants a fence: everything before it must complete and be visible before anything after it runs.</p>
       <pre><code><span class="kw">int</span> data = 0;
 
@@ -1072,6 +1185,15 @@ mutex.WaitOne();
     <section class="module" id="m11">
       <div class="m-eyebrow"><span class="m-num">11</span><span class="m-tag">Coordination</span></div>
       <h2 class="m-title">Signaling &amp; WaitHandle</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>A turnstile lets exactly one person through per buzz, then locks itself again — that's <code class="inline">AutoResetEvent</code>. A propped-open fire door lets everyone through at once and stays open until someone deliberately shuts it — that's <code class="inline">ManualResetEvent</code>.</p>
+        </div>
+      </div>
+
       <p>Locking answers "let one thread in at a time." <strong>Signaling</strong> answers a different question: "tell another thread that something happened." All the constructs below descend from <code class="inline">WaitHandle</code>, and share the same two moves — wait for a signal, then send one.</p>
       <h3 class="m-sub">AutoResetEvent — one signal wakes exactly one waiter</h3>
       <p>Think turnstile: each release lets exactly one thread through, then closes automatically. Perfect for hand-off patterns, like a producer telling one consumer "your item is ready."</p>
@@ -1130,6 +1252,15 @@ done.Wait(); <span class="c">// unblocks once all 3 have signaled</span></code><
     <section class="module" id="m12">
       <div class="m-eyebrow"><span class="m-num">12</span><span class="m-tag">Coordination</span></div>
       <h2 class="m-title">Barrier</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>The whole team has to badge in at the conference-room door before the meeting starts. Whoever arrives first doesn't start without the others — they just wait by the door for the stragglers, and everyone walks in together.</p>
+        </div>
+      </div>
+
       <p>Picture a relay of runners with wildly different paces, all required to meet at one checkpoint before the next leg starts. <code class="inline">Barrier</code> is that checkpoint: every participant calls <code class="inline">SignalAndWait()</code>, and none proceed until <em>all</em> of them have arrived — regardless of how differently sized their workloads were.</p>
       <pre><code><span class="kw">var</span> barrier = <span class="kw">new</span> <span class="ty">Barrier</span>(participantCount: 3, postPhaseAction: b =>
     <span class="ty">Console</span>.WriteLine($<span class="str">"phase {b.CurrentPhaseNumber} done, everyone regroup"</span>));
@@ -1156,6 +1287,15 @@ done.Wait(); <span class="c">// unblocks once all 3 have signaled</span></code><
     <section class="module" id="m13">
       <div class="m-eyebrow"><span class="m-num">13</span><span class="m-tag">Infrastructure</span></div>
       <h2 class="m-title">ThreadPool</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>A staffing agency with three permanent desks and a never-ending inbox tray. Nobody's hired or fired between tickets — whoever's free just pulls the next item off the tray and gets to it.</p>
+        </div>
+      </div>
+
       <p>A fresh <code class="inline">Thread</code> costs roughly 1&nbsp;MB and real OS setup time — fine for a handful of long-lived workers, wasteful for a stream of short, frequent jobs. <code class="inline">ThreadPool</code> keeps a standing set of reusable threads: request one, run your work, and it returns to the pool instead of being torn down.</p>
       <pre><code><span class="ty">ThreadPool</span>.QueueUserWorkItem(state =>
 {
@@ -1206,6 +1346,15 @@ done.Wait(); <span class="c">// unblocks once all 3 have signaled</span></code><
     <section class="module" id="m14">
       <div class="m-eyebrow"><span class="m-num">14</span><span class="m-tag">Infrastructure</span></div>
       <h2 class="m-title">Thread-local storage</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>The office noticeboard says the same thing to everyone who walks by. Everyone's own desk drawer, on the other hand, holds whatever they personally put there — nobody else's drawer changes just because you put something in yours.</p>
+        </div>
+      </div>
+
       <p>A <code class="inline">static</code> field is shared by every thread — one value, everyone sees the same change. <strong>Thread-local storage</strong> flips that: each thread gets its own private copy, so writes on one thread are invisible to the rest. It's synchronization by <em>not sharing</em>, rather than by coordinating access.</p>
       <div class="compare">
         <div class="card">
@@ -1248,6 +1397,15 @@ buffer.Value.Append(<span class="str">"scoped to this thread only"</span>);</cod
     <section class="module" id="m15">
       <div class="m-eyebrow"><span class="m-num">15</span><span class="m-tag">Infrastructure</span></div>
       <h2 class="m-title">Timers</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, continued</span>
+          <p>The office wall clock chimes on a schedule, not to the millisecond — close enough to start the meeting, never precise enough to run a stopwatch race.</p>
+        </div>
+      </div>
+
       <p>Hand-rolling a periodic task with an infinite loop and <code class="inline">Thread.Sleep</code> works, but it permanently pins a thread and drifts under load. A dedicated timer type is cheaper and more precise — and .NET gives you two families, chosen by where the code runs.</p>
       <div class="matrix-wrap">
         <table class="matrix">
@@ -1287,6 +1445,15 @@ timer.Change(dueTime: 0, period: 1500); <span class="c">// retune it later</span
     <section class="module" id="m16">
       <div class="m-eyebrow"><span class="m-num">16</span><span class="m-tag">Where next</span></div>
       <h2 class="m-title">Where this leads</h2>
+
+      <div class="callout metaphor">
+        <span class="ico">≈</span>
+        <div class="body">
+          <span class="tag">The office, one last time</span>
+          <p>Up to now, you've been managing individual employees by hand — assigning desks, checking badges, coordinating every handoff yourself. <code class="inline">Task</code>/<code class="inline">async</code>/<code class="inline">await</code> is handing that coordination to a management layer that's better at scheduling it than you are — while still using every desk, key, and hallway rule you just spent this course learning.</p>
+        </div>
+      </div>
+
       <p>Every primitive above still applies once you move to <code class="inline">async</code>/<code class="inline">await</code> and <code class="inline">Task</code> — a <code class="inline">Task</code> runs on the very thread pool you just met, race conditions don't disappear because the syntax changed, and <code class="inline">SemaphoreSlim.WaitAsync</code> exists precisely to bridge the two worlds. That's exactly why this course started here instead of there.</p>
       <ul class="checklist">
         <li><strong>Task &amp; async/await</strong> — the higher-level abstraction over threads, purpose-built for I/O-bound waits</li>
