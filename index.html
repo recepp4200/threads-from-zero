@@ -397,6 +397,16 @@
   .callout.lowlevel .ico{background:var(--surface-2); color:var(--accent); border:1px solid var(--border);}
   .callout.lowlevel p{font-family:var(--mono); font-size:.81rem; line-height:1.7; color:#c9cfdc;}
 
+  .callout .body{display:flex; flex-direction:column; gap:8px; min-width:0;}
+  .callout .body p{margin:0;}
+  .callout .body pre{margin:2px 0 0;}
+  .callout .body .tag{
+    font-family:var(--mono); font-size:.66rem; text-transform:uppercase; letter-spacing:.09em;
+    color:var(--danger);
+  }
+  .callout.wild{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--danger);}
+  .callout.wild .ico{background:var(--danger-soft); color:var(--danger); border:1px solid var(--border);}
+
   @media (prefers-reduced-motion: reduce){
     .viz-toggle{display:none;}
   }
@@ -472,6 +482,7 @@
       <h3>Foundations</h3>
       <ol>
         <li><a href="#m0"><span class="n">00</span> Process, thread, sync, async</a></li>
+        <li><a href="#mos"><span class="n">0½</span> Just enough OS</a></li>
         <li><a href="#m1"><span class="n">01</span> The Thread class</a></li>
         <li><a href="#m2"><span class="n">02</span> Identity &amp; lifecycle</a></li>
         <li><a href="#m3"><span class="n">03</span> The race condition</a></li>
@@ -587,6 +598,58 @@
       </div>
     </section>
 
+    <!-- 0.5 -->
+    <section class="module" id="mos">
+      <div class="m-eyebrow"><span class="m-num">½</span><span class="m-tag">Foundations</span></div>
+      <h2 class="m-title">Just enough operating system</h2>
+      <p>Operating systems are their own multi-semester subject — this isn't that. It's the small, load-bearing slice you actually lean on every time you touch <code class="inline">Thread</code>, and it's what makes the rest of this course click instead of feeling like memorized API trivia.</p>
+
+      <h3 class="m-sub">Two privilege levels, one CPU</h3>
+      <p>Your C# code runs in <strong>user mode</strong> — sandboxed, unable to directly touch hardware or other processes' memory. The <strong>kernel</strong> runs in a more privileged mode with no such restrictions. Anything that needs real power — allocate a thread's stack, open a file, wait on a lock the OS is tracking — has to cross that boundary through a <strong>syscall</strong>: your code traps into the kernel, the kernel does the work, control returns to you.</p>
+      <p>That crossing isn't free — it flushes some CPU-level state and costs real cycles, on top of whatever work actually happened. This is the concrete reason <code class="inline">Monitor</code>'s uncontended thin lock (pure user-mode, Module 4) is so much cheaper than a <code class="inline">Mutex</code> wait (always a kernel round-trip, Module 5) — you're now paying for that boundary crossing every single time.</p>
+
+      <h3 class="m-sub">The scheduler doesn't know your code — only your threads</h3>
+      <p>A CPU core runs exactly one thread's instructions at any instant. The kernel's <strong>scheduler</strong> decides which of the runnable threads gets that core next, and for how long — a slice called a <strong>quantum</strong>, typically single-digit to low double-digit milliseconds on desktop Windows. When the slice ends, or the thread blocks on something (I/O, a lock, a sleep), the scheduler saves its state and hands the core to someone else. With more threads than cores, this is the only reason concurrency looks simultaneous at all.</p>
+
+      <div class="viz" data-viz="cores">
+        <div class="viz-head"><span class="viz-label">Mental model — 5 threads, 2 cores</span><button class="viz-toggle" type="button">Pause</button></div>
+        <canvas></canvas>
+        <div class="viz-foot"><strong>IRL</strong> two checkout lanes and five customers — the store doesn't open three more lanes just because more people walked in; it time-shares the two it has.</div>
+      </div>
+
+      <p>Notice what this implies: piling on more <code class="inline">Thread</code> objects than you have cores doesn't make CPU-bound work faster — it just makes the scheduler juggle more, paying for more context switches along the way. Where extra threads genuinely help is when threads spend time <em>blocked</em> — waiting on a file, a socket, a database round-trip — because a blocked thread isn't occupying a core at all; the scheduler simply runs someone else there in the meantime. That distinction — CPU-bound vs. blocked-waiting — is exactly the line Module 0 drew between multithreading and async programming, and it's the same line that decides how many <code class="inline">ThreadPool</code> threads actually help in Module 13.</p>
+
+      <div class="callout wild">
+        <span class="ico">◆</span>
+        <div class="body">
+          <span class="tag">Seen in the wild — WinForms &amp; WPF</span>
+          <p>The scheduler is completely indifferent to which thread updates a UI control — but the UI framework isn't. Every WinForms/WPF control is affinitized to the thread that created it, and touching one from a worker thread throws at runtime, not compile time:</p>
+          <pre><code><span class="kw">void</span> DoWork()
+{
+    <span class="kw">var</span> worker = <span class="kw">new</span> <span class="ty">Thread</span>(() =>
+    {
+        <span class="kw">int</span> result = SlowCalculation();
+        label1.Text = result.ToString(); <span class="c">// 💥 InvalidOperationException:</span>
+                                          <span class="c">// "Cross-thread operation not valid"</span>
+    });
+    worker.Start();
+}
+
+<span class="c">// the fix — hop back onto the UI thread before touching the control</span>
+<span class="kw">void</span> DoWorkSafely()
+{
+    <span class="kw">var</span> worker = <span class="kw">new</span> <span class="ty">Thread</span>(() =>
+    {
+        <span class="kw">int</span> result = SlowCalculation();
+        label1.Invoke(<span class="kw">new</span> <span class="ty">Action</span>(() => label1.Text = result.ToString()));
+    });
+    worker.Start();
+}</code></pre>
+          <p>It's a deliberate, framework-level guard rail — not an OS restriction — that exists precisely because nothing at the scheduler level would otherwise stop two threads from racing to repaint the same control.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- 01 -->
     <section class="module" id="m1">
       <div class="m-eyebrow"><span class="m-num">1</span><span class="m-tag">Foundations</span></div>
@@ -672,6 +735,24 @@ t1.Join(); t2.Join();
         <span class="ico">λ</span>
         <p><code class="inline">counter++</code> compiles to three separate CPU instructions — <code class="inline">MOV</code> (read), <code class="inline">ADD</code> (modify), <code class="inline">MOV</code> (write) — with no protection between them. A core can be preempted between any two, and its private cache copy of <code class="inline">counter</code> can also be stale relative to another core's, so the bug is both a scheduling problem and a cache-coherency one.</p>
       </div>
+
+      <div class="callout wild">
+        <span class="ico">◆</span>
+        <div class="body">
+          <span class="tag">Seen in the wild — ASP.NET Core</span>
+          <p>A <code class="inline">Singleton</code> service instance is shared by every concurrent request on the server — which makes an innocent-looking hit counter a live race condition in production, not a lab exercise:</p>
+          <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">RequestStatsService</span>
+{
+    <span class="kw">public</span> <span class="kw">int</span> TotalRequests; <span class="c">// plain field, one instance for the whole app</span>
+
+    <span class="kw">public</span> <span class="kw">void</span> Track() => TotalRequests++; <span class="c">// 💥 lost updates under real load</span>
+}
+
+<span class="c">// Program.cs</span>
+builder.Services.AddSingleton&lt;<span class="ty">RequestStatsService</span>&gt;(); <span class="c">// one shared instance, many request threads</span></code></pre>
+          <p>Under light traffic it looks fine — the race window rarely gets hit. Under real concurrent load the counter quietly under-reports, and nothing in the logs tells you why. Fix it with <code class="inline">Interlocked.Increment(ref TotalRequests)</code> from Module 9, which is exactly the kind of single-field counter it exists for.</p>
+        </div>
+      </div>
     </section>
 
     <!-- 04 -->
@@ -721,6 +802,23 @@ t1.Join(); t2.Join();
       <div class="callout lowlevel">
         <span class="ico">λ</span>
         <p>Uncontended, a CLR <code class="inline">lock</code> is nearly free — it's a "thin lock" living in a couple of spare bits in the object's header, set with a single atomic CPU instruction, no OS call at all. Only once a <em>second</em> thread actually contends for it does the runtime escalate to a heavier kernel wait object — most locks in a healthy program never pay that cost.</p>
+      </div>
+
+      <div class="callout wild">
+        <span class="ico">◆</span>
+        <div class="body">
+          <span class="tag">Real bug — the lock-ordering deadlock</span>
+          <p>Two locks are individually correct. Taken in <em>opposite order</em> by two threads, they can each grab one and wait forever for the other — a classic deadlock that only shows up under contention, which is exactly when you can least afford it:</p>
+          <pre><code><span class="kw">readonly</span> <span class="kw">object</span> lockA = <span class="kw">new</span>();
+<span class="kw">readonly</span> <span class="kw">object</span> lockB = <span class="kw">new</span>();
+
+<span class="c">// Thread 1</span>
+<span class="kw">lock</span> (lockA) { <span class="ty">Thread</span>.Sleep(10); <span class="kw">lock</span> (lockB) { <span class="c">/* ... */</span> } }
+
+<span class="c">// Thread 2 — same two locks, reversed order</span>
+<span class="kw">lock</span> (lockB) { <span class="ty">Thread</span>.Sleep(10); <span class="kw">lock</span> (lockA) { <span class="c">/* ... */</span> } } <span class="c">// 💥 deadlock</span></code></pre>
+          <p>Thread 1 holds <code class="inline">lockA</code> and waits for <code class="inline">lockB</code>; Thread 2 holds <code class="inline">lockB</code> and waits for <code class="inline">lockA</code>. Neither can ever proceed. The fix isn't a smarter lock — it's a rule: <strong>always acquire shared locks in the same global order</strong> everywhere in the codebase, so this cycle can't form. When ordering genuinely can't be guaranteed, <code class="inline">Monitor.TryEnter</code> with a timeout — shown above — at least lets a thread back off and retry instead of hanging forever.</p>
+        </div>
       </div>
     </section>
 
@@ -942,6 +1040,32 @@ mutex.WaitOne();
         <span class="ico">λ</span>
         <p>Both the JIT compiler and the CPU are allowed to reorder independent instructions for speed — a relaxed memory model. <code class="inline">Thread.MemoryBarrier()</code> compiles to a hardware fence instruction (like <code class="inline">MFENCE</code> on x86) that flushes the store buffer and forces every earlier write to become visible to other cores before any later read proceeds.</p>
       </div>
+
+      <div class="callout wild">
+        <span class="ico">◆</span>
+        <div class="body">
+          <span class="tag">Real bug — the broken double-checked lock</span>
+          <p>This singleton pattern is copy-pasted constantly, and it's subtly wrong without <code class="inline">volatile</code>: the compiler or CPU is free to make <code class="inline">_instance</code> visible to another thread <em>before</em> the constructor inside <code class="inline">new Service()</code> has actually finished initializing it.</p>
+          <pre><code><span class="kw">public</span> <span class="kw">class</span> <span class="ty">ServiceLocator</span>
+{
+    <span class="kw">private</span> <span class="kw">static</span> <span class="ty">Service</span> _instance; <span class="c">// 💥 missing volatile</span>
+    <span class="kw">private</span> <span class="kw">static</span> <span class="kw">readonly</span> <span class="kw">object</span> gate = <span class="kw">new</span>();
+
+    <span class="kw">public</span> <span class="kw">static</span> <span class="ty">Service</span> Instance
+    {
+        <span class="kw">get</span>
+        {
+            <span class="kw">if</span> (_instance == <span class="kw">null</span>)             <span class="c">// check 1, no lock</span>
+                <span class="kw">lock</span> (gate)
+                    <span class="kw">if</span> (_instance == <span class="kw">null</span>)     <span class="c">// check 2, locked</span>
+                        _instance = <span class="kw">new</span> <span class="ty">Service</span>(); <span class="c">// another thread could see a half-built object here</span>
+            <span class="kw">return</span> _instance;
+        }
+    }
+}</code></pre>
+          <p>A second thread's first, lock-free check can read a non-null reference to an object that isn't fully constructed yet, and start using it. Marking the field <code class="inline">volatile static Service _instance;</code> forces the write to be published in order — or sidestep the whole pattern with .NET's built-in <code class="inline">Lazy&lt;T&gt;</code>, which implements this correctly for you.</p>
+        </div>
+      </div>
     </section>
 
     <!-- 11 -->
@@ -1060,6 +1184,21 @@ done.Wait(); <span class="c">// unblocks once all 3 have signaled</span></code><
       <div class="callout lowlevel">
         <span class="ico">λ</span>
         <p>Internally, the pool keeps a global queue plus a per-core local queue for each worker, so a thread usually pulls its next job without ever touching shared, contended state — and can "steal" from another core's queue if its own runs dry. Growing the pool is throttled by a hill-climbing heuristic, which is why a sudden burst doesn't instantly spawn hundreds of new threads.</p>
+      </div>
+
+      <div class="callout wild">
+        <span class="ico">◆</span>
+        <div class="body">
+          <span class="tag">Real bug — sync-over-async deadlock</span>
+          <p>A preview of Module 16: calling <code class="inline">.Result</code> or <code class="inline">.Wait()</code> on a <code class="inline">Task</code> from certain contexts (classic ASP.NET MVC, a WPF/WinForms UI thread) can deadlock the whole request or app — and it's one of the most common production incidents in .NET history.</p>
+          <pre><code><span class="c">// inside an ASP.NET (classic) controller action or a UI event handler</span>
+<span class="kw">public</span> <span class="ty">ActionResult</span> Index()
+{
+    <span class="kw">var</span> data = GetDataAsync().Result; <span class="c">// 💥 can hang forever</span>
+    <span class="kw">return</span> View(data);
+}</code></pre>
+          <p>The calling context has a <code class="inline">SynchronizationContext</code> that only lets one piece of work run at a time. <code class="inline">.Result</code> blocks that one slot waiting for the task to finish — but the <code class="inline">await</code> inside <code class="inline">GetDataAsync()</code> wants to resume on that <em>same</em> slot once its work is done. Neither can move: the thread is blocked waiting for the very continuation it's blocking. The fix is boring but reliable — <code class="inline">await</code> all the way up the call stack, never <code class="inline">.Result</code>/<code class="inline">.Wait()</code> on async code you don't control. (ASP.NET Core has no such <code class="inline">SynchronizationContext</code> by default, which is why this specific trap is rarer there — but the underlying habit is still worth never forming.)</p>
+        </div>
       </div>
     </section>
 
@@ -1246,6 +1385,48 @@ timer.Change(dueTime: 0, period: 1500); <span class="c">// retune it later</span
       }
     });
   };
+
+  registry.cores = (function(){
+    var cache=null;
+    function schedule(){
+      if(cache) return cache;
+      var names=['T1','T2','T3','T4','T5'], cores=2, quantum=0.5, laps=4, coreFree=[0,0], jobs=[];
+      for(var lap=0; lap<laps; lap++){
+        for(var i=0;i<names.length;i++){
+          var c0=0; for(var k=1;k<cores;k++) if(coreFree[k]<coreFree[c0]) c0=k;
+          var start=coreFree[c0], end=start+quantum;
+          jobs.push({core:c0, start:start, end:end, name:names[i], idx:i});
+          coreFree[c0]=end;
+        }
+      }
+      cache={jobs:jobs, loop:jobs[jobs.length-1].end+0.4};
+      return cache;
+    }
+    return function(ctx,w,h,t,C){
+      ctx.clearRect(0,0,w,h);
+      var sc=schedule(), lt=t%sc.loop;
+      var colors=[C.accent,C.accent2,C.danger,C.faint,C.text];
+      var laneY=[48,110], x0=88, x1=w-24;
+      label(ctx,'2 CPU cores — 5 runnable threads',16,18,C.faint,'left',FONT_SM);
+      laneY.forEach(function(y,ci){
+        label(ctx,'Core '+ci,16,y,C.text,'left',FONT_SM);
+        ctx.strokeStyle='rgba(255,255,255,.08)';
+        ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y); ctx.stroke();
+      });
+      sc.jobs.forEach(function(j){
+        if(lt>=j.start && lt<j.end){
+          var y=laneY[j.core];
+          ctx.fillStyle=colors[j.idx];
+          rr(ctx,x0,y-13,58,26,6); ctx.fill();
+          label(ctx,j.name,x0+29,y,C.bg,'center',FONT_SM);
+          var qp=(lt-j.start)/(j.end-j.start);
+          ctx.fillStyle='rgba(255,255,255,.16)';
+          ctx.fillRect(x0,y+15,58*qp,3);
+        }
+      });
+      label(ctx,'quantum → next thread gets a turn',x0+70,laneY[1]+34,C.faint,'left',FONT_SM);
+    };
+  })();
 
   registry.race = function(ctx,w,h,t,C){
     ctx.clearRect(0,0,w,h);
