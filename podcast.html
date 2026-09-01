@@ -141,17 +141,48 @@
     margin-top:56px; padding-top:32px; border-top:1px solid var(--border-soft);
     color:var(--text-faint); font-size:.85rem;
   }
+
+  .fieldreport{
+    margin:18px 20px 4px 20px;
+    padding:16px 18px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent-2);
+    border-radius:8px;
+  }
+  .fieldreport .fr-tag{
+    display:block; font-family:var(--mono); font-size:.66rem; text-transform:uppercase;
+    letter-spacing:.09em; color:var(--accent-2); margin-bottom:8px;
+  }
+  .fieldreport .line{margin:10px 0;}
+  .fieldreport .line:first-of-type{margin-top:0;}
+
+  .sources{
+    margin:14px 20px 20px 20px;
+    padding:12px 16px;
+    border:1px dashed var(--border);
+    border-radius:8px;
+    font-size:.8rem;
+  }
+  .sources .src-tag{
+    display:block; font-family:var(--mono); font-size:.64rem; text-transform:uppercase;
+    letter-spacing:.09em; color:var(--text-faint); margin-bottom:6px;
+  }
+  .sources ul{margin:0; padding-left:1.1em; color:var(--text-dim);}
+  .sources li{margin:3px 0;}
+  .sources a{word-break:break-word;}
 </style>
 
 <div class="wrap">
   <a class="back" href="./">← Back to the course</a>
   <p class="kicker">A companion listen</p>
   <h1>Threads From Zero — The Podcast</h1>
-  <p class="dek">Eight scripted episodes, two hosts, no filler — the same two-part course (C# concurrency, then the operating system underneath it) read out loud instead of read on screen. These are full production scripts: stage directions, running bits, the works. Feed them to a TTS voice, record them yourself, or just read them here.</p>
+  <p class="dek">Eight scripted episodes, two hosts, no filler — the same two-part course (C# concurrency, then the operating system underneath it) read out loud instead of read on screen. Six episodes carry a "Field Report" — a researched, sourced segment on a real incident or a real measured number, not an invented anecdote: Therac-25, the Knight Capital $460M loss, the Mars Pathfinder priority-inversion bug, Bélády's original 1969 anomaly, and more, each with primary or well-documented sources linked at the end of the segment.</p>
   <div class="meta-row">
     <span>8 episodes</span>
-    <span>~10–14 min each</span>
+    <span>~14–19 min each</span>
     <span>Hosts: Priya &amp; Jonah</span>
+    <span>7 sourced field reports</span>
     <span>Scripts, not audio — see note below</span>
   </div>
 
@@ -214,6 +245,26 @@
       <div class="line"><span class="who priya">PRIYA</span><p>Mutex is the version for when the key needs to work on a building across the street. Two separate processes, one shared loading-dock key — and because it has to be visible to a completely different program, it's registered with the actual operating system instead of just living in your app's memory. Which also makes it slower. Costs a real trip to, essentially, city hall every time.</p></div>
       <div class="line"><span class="who jonah">JONAH</span><p>So: cheap key for coworkers in the same building, expensive key for coworkers in a different building entirely.</p></div>
       <div class="line"><span class="who priya">PRIYA</span><p>That's the whole trade-off. And — small flex — the classic "single instance of this app" trick? That's a named Mutex checking if the key's already taken before your app even opens a window.</p></div>
+
+      <div class="fieldreport">
+        <span class="fr-tag">Field report — we did the reading</span>
+        <div class="line"><span class="who jonah">JONAH</span><p>Okay, before we wrap — you said this "undersells it" earlier. Give me the worst version of a race condition you've actually read about.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>The Therac-25. Radiation therapy machine from the mid-80s. Between 1985 and 1987 it delivered massive overdoses in at least six documented incidents — two patients died from it. Software safety researcher Nancy Leveson did the definitive investigation with Clark Turner, and of the bugs they found, the first two were race conditions.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>Wait — the exact same category of bug we've been calling "a whiteboard tally" for the last ten minutes?</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Same category. If an experienced operator entered treatment data fast — and typing fast was actually rewarded by the interface — the machine's internal state and its display could fall out of sync with each other. Specifically: change the beam type and energy within about eight seconds, then move the cursor to the final field, and the software would fail to notice the edit ever happened. Timing-dependent. Not consistent. It worked fine most of the time.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>Which is the actual nightmare part of race conditions — they pass testing.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>They pass testing constantly, because your test run happened to not hit the interleaving. And Leveson's broader point — I think about this one a lot — is it usually isn't just one race condition. It's a chain: a software assumption, a hardware interlock that earlier machines in the same product line actually had and this one dropped, an interface that didn't surface what state the machine was really in, and an organization that didn't take early incident reports seriously enough. The race condition was necessary. It wasn't sufficient on its own.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>Okay, that's a genuinely heavy note to land the "just use a lock" episode on.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>It's supposed to be. Every callout in this course about "release in a finally" or "keep the critical section small" reads like pedantry until you remember it's the same category of bug, just at wildly different stakes. Same mechanism, different blast radius.</p></div>
+      </div>
+      <div class="sources">
+        <span class="src-tag">Sources for this segment</span>
+        <ul>
+          <li>Nancy G. Leveson &amp; Clark S. Turner, <a href="https://www.cs.columbia.edu/~junfeng/08fa-e6998/sched/readings/therac25.pdf" target="_blank" rel="noopener">"An Investigation of the Therac-25 Accidents"</a> (IEEE Computer, 1993)</li>
+          <li><a href="https://www.taylortailored.co.uk/history/the-therac-25-disaster-explained-how-a-software-bug-gave-patients-massive-radiation-overdoses" target="_blank" rel="noopener">Therac-25 Disaster Explained</a> — Taylor Tailored, historical summary</li>
+        </ul>
+      </div>
+
       <div class="takeaway"><strong>Show note</strong>A race condition is a lost update on a shared value; <code>lock</code>/Monitor solve it in-process; Mutex solves the same problem across process boundaries, at OS cost. Covers Modules 3–5.</div>
     </div>
   </details>
@@ -239,11 +290,45 @@
       <div class="line"><span class="who priya">PRIYA</span><p>Two coworkers, one copier. One of them stands there tapping the door handle every second until it opens — that's spinning, <code>SpinLock</code>. The other one just walks back to their desk and waits to be told — that's blocking, your regular lock.</p></div>
       <div class="line"><span class="who jonah">JONAH</span><p>Tapping seems... exhausting? Why would you ever do that?</p></div>
       <div class="line"><span class="who priya">PRIYA</span><p>Because going back to your desk and getting told has a real cost — someone has to physically come find you. If the copier's about to open in like, half a second, tapping wins. If it's gonna be five minutes, tapping is just you burning a CPU core for nothing.</p></div>
+
+      <div class="fieldreport">
+        <span class="fr-tag">Field report — we did the reading</span>
+        <div class="line"><span class="who jonah">JONAH</span><p>Okay but give me an actual number. "Someone has to physically come find you" — how long does that really take?</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Depends what you count. Eli Bendersky ran the classic version of this measurement on Linux threads and got the <em>direct</em> cost — literally the kernel doing the switch — down around 1.2 to 1.5 microseconds when both threads are pinned to one core.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>That sounds fast enough to not care about.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>That's just the toll booth, though. The real cost is what happens after — your CPU's L1/L2 caches, its branch predictor, the TLB from Part Two, all of it was primed for the thread that just got kicked off. The incoming thread starts cold. Depending on how much state got evicted, that indirect cost can genuinely run into the tens or low hundreds of microseconds per switch, way more than the switch itself.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>So the tap-on-the-door thread isn't just avoiding "waiting" — it's avoiding evicting the whole building's memory of what it was doing.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Exactly. That's the actual argument for spinning on genuinely microsecond-scale waits — you're not just saving a scheduler round-trip, you're saving your caches. It just stops being a good trade the second the wait gets long, because now you're burning a full core AND you still eventually pay for a cold cache when something finally does switch you out.</p></div>
+      </div>
+      <div class="sources">
+        <span class="src-tag">Sources for this segment</span>
+        <ul>
+          <li>Eli Bendersky, <a href="https://eli.thegreenplace.net/2018/measuring-context-switching-and-memory-overheads-for-linux-threads/" target="_blank" rel="noopener">"Measuring context switching and memory overheads for Linux threads"</a> (2018)</li>
+        </ul>
+      </div>
+
       <div class="line"><span class="who jonah">JONAH</span><p>Okay last one on the list — Interlocked. That name is very aggressive for something I assume is small.</p></div>
       <div class="line"><span class="who priya">PRIYA</span><p>It IS small — that's the whole point. Instead of a whiteboard tally two people can misread mid-write, imagine a mechanical click-counter bolted to the door. One motion. There's no "half-written" state for anyone to accidentally catch.</p></div>
       <div class="line"><span class="who jonah">JONAH</span><p>And MemoryBarrier?</p></div>
       <div class="line"><span class="who priya">PRIYA</span><p>That one's the weird one — it's not about who goes first, it's about making sure a written note actually arrives in order. An inter-office mail slot that guarantees letters land in the order they were dropped in. Without it, a fast note can technically overtake a slower one that was sent earlier, and nobody would ever know the order got scrambled.</p></div>
       <div class="line"><span class="who jonah">JONAH</span><p>That is the spookiest thing you've said all episode.</p></div>
+
+      <div class="fieldreport">
+        <span class="fr-tag">Field report — we did the reading</span>
+        <div class="line"><span class="who priya">PRIYA</span><p>It's spooky enough that it has its own famous piece of internet infamy. There's a coding pattern called "double-checked locking" — check a flag, only lock and check again if it looks unset, to avoid paying for a lock on every call. For years everyone assumed it was fine.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>Let me guess — it was not fine.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Bill Pugh — this is a University of Maryland professor, one of the people who actually rewrote the Java Memory Model in the early 2000s under a spec called JSR-133 — published a whole page just titled "Double-Checked Locking is Broken." Without a memory barrier, another thread's first, lock-free check can read a reference to an object that isn't finished being constructed yet.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>So you'd be handed a "ready" object that's secretly half-built.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>That's the whole bug. And it's exactly why <code>volatile</code> — or in .NET, just using <code>Lazy&lt;T&gt;</code> and not writing this pattern by hand at all — matters more than it looks like it should. The fix for the entire Java ecosystem's version of this actually became part of the language's official memory model rewrite. That's how real the problem was considered.</p></div>
+      </div>
+      <div class="sources">
+        <span class="src-tag">Sources for this segment</span>
+        <ul>
+          <li>Bill Pugh et al., <a href="http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html" target="_blank" rel="noopener">"Double-Checked Locking is Broken"</a> declaration</li>
+          <li><a href="https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html" target="_blank" rel="noopener">JSR-133 (Java Memory Model) FAQ</a></li>
+        </ul>
+      </div>
+
       <div class="line"><span class="who priya">PRIYA</span><p>Save your fear — next episode has a room full of philosophers who can't eat dinner. It gets spookier.</p></div>
       <div class="takeaway"><strong>Show note</strong>Semaphore/SemaphoreSlim generalize a lock to N permits; ReaderWriterLockSlim splits safe-concurrent reads from exclusive writes; spinning trades CPU for latency; Interlocked and MemoryBarrier operate below the level of locks entirely. Covers Modules 6–10.</div>
     </div>
@@ -269,6 +354,28 @@
       <div class="line"><span class="who jonah">JONAH</span><p>Okay, we're near the end of Part One — give me the ThreadPool pitch.</p></div>
       <div class="line"><span class="who priya">PRIYA</span><p>A staffing agency with three permanent desks and a bottomless inbox tray. Nobody's hired or fired between tickets — whoever's free just grabs the next one. Because — quick fact that should scare you a little — a brand new <code>Thread</code> costs about a megabyte and real OS setup time, every single time.</p></div>
       <div class="line"><span class="who jonah">JONAH</span><p>So don't `new Thread()` in a loop.</p></div>
+
+      <div class="fieldreport">
+        <span class="fr-tag">Field report — we did the reading</span>
+        <div class="line"><span class="who jonah">JONAH</span><p>Okay, "the staffing agency hires more people when it's busy" — how fast does that actually happen? Because I feel like there's a catch coming.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>There is absolutely a catch, and it's one of the most-hit real production gotchas in .NET. The pool doesn't scale on vibes — it runs an actual hill-climbing algorithm, based on a Microsoft research paper called "Optimizing Concurrency Levels in the .NET ThreadPool." It measures throughput, and if adding a thread seems to help, it adds one. But Matt Warren dug into the actual source and found the injection rate when the pool is fully starved: roughly one new thread every 500 milliseconds.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>That sounds fine? Half a second?</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Do the math on a real spike. If your API needs, say, a hundred concurrent worker threads and it's starting from eight — that's roughly ninety-two half-second steps. You are looking at something like <em>forty-six seconds</em> of degraded throughput before the pool has actually caught up to demand.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>Forty-six seconds is an eternity for a web request.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>It's an eternity — and it's exactly why <code>ThreadPool.SetMinThreads</code> from this course isn't a nice-to-have, it's a real lever: it pre-warms the staff so the agency isn't starting from eight desks the moment traffic spikes.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>Is this the same pool that gets exhausted by the sync-over-async thing you mentioned back in an earlier episode?</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Same pool, related but distinct failure. Stephen Cleary — his blog is basically required reading if you touch async C# professionally — wrote the canonical explainer, "There Is No Thread," plus an earlier one called "It's All About the SynchronizationContext." The short version: block a pool thread waiting on <code>.Result</code>, and under the wrong context you can deadlock — the continuation that would unblock you needs that exact same context slot back.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>So it's not even that the pool is slow to grow — it's that you can wedge it shut entirely.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Exactly. Two different ways the same staffing agency can fail you, and both of them are things Part One and Part Two, together, actually explain.</p></div>
+      </div>
+      <div class="sources">
+        <span class="src-tag">Sources for this segment</span>
+        <ul>
+          <li>Matt Warren, <a href="https://mattwarren.org/2017/04/13/The-CLR-Thread-Pool-Thread-Injection-Algorithm/" target="_blank" rel="noopener">"The CLR Thread Pool 'Thread Injection' Algorithm"</a> (2017)</li>
+          <li>Stephen Cleary, <a href="https://blog.stephencleary.com/2013/11/there-is-no-thread.html" target="_blank" rel="noopener">"There Is No Thread"</a> (2013)</li>
+        </ul>
+      </div>
+
       <div class="line"><span class="who priya">PRIYA</span><p>Never `new Thread()` in a loop. And ThreadLocal is the fun closer — think office noticeboard versus everyone's own desk drawer. The noticeboard says the same thing to everyone. Your drawer is yours; nobody else's drawer changes because you put something in yours.</p></div>
       <div class="line"><span class="who jonah">JONAH</span><p>And Timers?</p></div>
       <div class="line"><span class="who priya">PRIYA</span><p>Office wall clock. Chimes on schedule, not to the millisecond — close enough to start the meeting, never precise enough to run a stopwatch race. And that — is a wrap on Part One.</p></div>
@@ -332,6 +439,29 @@
       <div class="line"><span class="who priya">PRIYA</span><p>Within seconds. Exhausts the process table, exhausts memory, the machine stops responding to anything. It's exactly why production systems set hard per-user process limits — you cannot trust every process to self-regulate.</p></div>
       <div class="line"><span class="who jonah">JONAH</span><p>Great, love that for us. Quick scheduling question before we go — how does the OS decide who gets the CPU next?</p></div>
       <div class="line"><span class="who priya">PRIYA</span><p>One road into downtown, everyone wants it. First-come-first-served is simple but one long job at the front stalls everyone behind it. Shortest-job-first is provably optimal but needs to predict the future. Round robin gives everyone a fixed slice and rotates — which is basically what real schedulers like Linux's CFS approximate, continuously, instead of a fixed textbook algorithm.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>"Approximate, continuously" — what does that actually mean, concretely?</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>CFS gives every runnable task a slice out of a target window — default's documented around six milliseconds, called <code>sched_latency_ns</code> — and it just always picks whichever task has accumulated the least "virtual runtime" so far. No fixed quantum handed out in advance, no explicit turn order. And every process's "weight" in that competition comes from its nice value — the classic -20 to +19 range — where each single step is roughly a 10% change in CPU weight. Nice -20 gets a weight around 88,761; nice +19 gets a weight around 15.</p></div>
+      <div class="line"><span class="who jonah">JONAH</span><p>That's a genuinely huge range between the top and bottom.</p></div>
+      <div class="line"><span class="who priya">PRIYA</span><p>Almost 6000-to-1. Which is the point — "priority" isn't a vague hint to the scheduler, it's a literal multiplier on how much of that virtual runtime clock ticks for you.</p></div>
+
+      <div class="fieldreport">
+        <span class="fr-tag">Field report — we did the reading</span>
+        <div class="line"><span class="who jonah">JONAH</span><p>Okay, priority actually mattering that much makes me want to ask — has priority scheduling ever gone wrong in a really public way?</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Mars Pathfinder, July 1997. Days after landing, the lander started randomly resetting itself and losing science data. The cause was priority inversion — a low-priority weather-data task grabbed a shared mutex, then got preempted mid-hold by a medium-priority task, which blocked a high-priority information-bus task that was waiting on that exact same mutex.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>So the important task was stuck waiting behind the unimportant one, with a medium task cutting the whole line.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Exactly backwards from what priority is supposed to guarantee. Eventually a watchdog timer noticed the high-priority task had missed its deadline and reset the whole system as a safety measure. And here's the actually maddening part — the fix already existed. VxWorks, the RTOS running on the lander, supported priority inheritance, where a low-priority task temporarily borrows the priority of whoever's waiting on it so it can't get stuck behind a third party.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>Let me guess — it just wasn't turned on.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>It was a boolean flag, defaulted to off for performance reasons. Engineers on Earth diagnosed it, and VxWorks happened to ship a live C interpreter meant for debugging — so they genuinely uplinked a short C program to a spacecraft already on Mars that flipped that one flag from false to true. Fixed a scheduling bug on another planet with a runtime patch.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>That might be the single best argument for "read the defaults on your synchronization primitives" I have ever heard.</p></div>
+      </div>
+      <div class="sources">
+        <span class="src-tag">Sources for this segment</span>
+        <ul>
+          <li><a href="https://www.cse.chalmers.se/~risat/Report_MarsPathFinder.pdf" target="_blank" rel="noopener">Mars Pathfinder: Priority Inversion Problem</a> — technical report</li>
+          <li><a href="https://doc.opensuse.org/documentation/leap/archive/42.1/tuning/html/book.sle.tuning/cha.tuning.taskscheduler.html" target="_blank" rel="noopener">Tuning the Task Scheduler</a> — openSUSE documentation, CFS parameters</li>
+        </ul>
+      </div>
+
       <div class="takeaway"><strong>Show note</strong><code>fork()</code> duplicates a process; <code>exec()</code> replaces its program image; shared memory and message passing are the two ways separated processes talk; scheduling algorithms trade fairness against throughput against starvation. Covers OS Modules 4–5.</div>
     </div>
   </details>
@@ -361,6 +491,28 @@
       <div class="line"><span class="who priya">PRIYA</span><p>Four conditions, all true simultaneously — resources held exclusively, holding one while waiting on another, no forcibly taking a fork back, and a circular chain of everyone waiting on the next person. Break any one of the four and it can't happen.</p></div>
       <div class="line"><span class="who jonah">JONAH</span><p>So what's the actual fix for the philosophers?</p></div>
       <div class="line"><span class="who priya">PRIYA</span><p>Cheapest one: break the symmetry. Have one philosopher reach for the <em>right</em> fork first instead of the left. That one asymmetry is enough to make the whole cycle impossible — no vote, no coordinator, just one different order.</p></div>
+
+      <div class="fieldreport">
+        <span class="fr-tag">Field report — we did the reading</span>
+        <div class="line"><span class="who jonah">JONAH</span><p>Deadlocks and race conditions both involve "shared state going wrong" — is there a real case that's neither one exactly, just... shared state betraying everyone?</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Knight Capital, August 1st, 2012. And I want to be precise here because it gets called a race condition constantly online and that's not quite right — it's actually a more interesting failure mode. In 2005, Knight had a feature called "Power Peg" that they deprecated in 2003. The code for it never got deleted. It just sat there, dead, inert.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>Dead code that's still technically loaded — I already don't like where this is going.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>In 2012 they were deploying new code that reused an old flag — the same flag that used to mean "trigger Power Peg." They rolled the new deployment out to eight servers. Seven of them got the update. One didn't.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>So one server had a completely different understanding of what that flag meant than the other seven.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Exactly — a shared signal, interpreted two different ways by concurrently running systems, which is the same root shape as a race condition even though the timing wasn't the trigger, an incomplete deployment was. That eighth server started firing off orders through the resurrected Power Peg logic. In the first 45 minutes of trading, it sent over 4 million orders trying to fill 212 customer requests, and traded almost 400 million shares nobody wanted.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>What did that cost them?</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Over $460 million dollars. In 45 minutes. The company nearly ceased to exist over it, and the SEC separately fined them $12 million for not having adequate safeguards on market access.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>So the lesson isn't really "watch out for interleaved instructions" this time.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>The lesson is: shared mutable state doesn't have to be racy in the classic textbook sense to be catastrophic — it just has to be <em>inconsistent</em> across the things reading it at the same time. Dead code and a half-finished deployment did exactly what a badly-ordered lock could have done.</p></div>
+      </div>
+      <div class="sources">
+        <span class="src-tag">Sources for this segment</span>
+        <ul>
+          <li><a href="https://www.sec.gov/newsroom/press-releases/2013-222" target="_blank" rel="noopener">SEC: "SEC Charges Knight Capital With Violations of Market Access Rule"</a> (2013)</li>
+          <li><a href="https://www.henricodolfing.ch/en/case-study-4-the-440-million-software-error-at-knight-capital/" target="_blank" rel="noopener">Henrico Dolfing, "Case Study 4: The $440 Million Software Error at Knight Capital"</a></li>
+        </ul>
+      </div>
+
       <div class="takeaway"><strong>Show note</strong>Mutual exclusion, progress, and bounded waiting define a correct solution; Peterson's Algorithm proves it's possible in pure software but isn't used in practice; dining philosophers stages all four deadlock conditions at once, fixed by breaking lock-acquisition symmetry. Covers OS Modules 6–8.</div>
     </div>
   </details>
@@ -384,6 +536,23 @@
       <div class="line"><span class="who priya">PRIYA</span><p>Something's gotta go. FIFO evicts the oldest — simple, but can somehow get <em>worse</em> with more frames, a genuinely weird result called Belady's Anomaly. LRU evicts whatever hasn't been touched in the longest time — much better in practice. And if you're doing this so much that you're spending more time evicting than working —</p></div>
       <div class="line"><span class="who jonah">JONAH</span><p>— thrashing.</p></div>
       <div class="line"><span class="who priya">PRIYA</span><p>Thrashing. Add more processes, and utilization goes <em>down</em>, not up. Machine looks frozen and there's no single obvious culprit.</p></div>
+
+      <div class="fieldreport">
+        <span class="fr-tag">Field report — we did the reading</span>
+        <div class="line"><span class="who jonah">JONAH</span><p>Back up — you said Belady's Anomaly is a "genuinely weird result." Is there an actual number, or is that just a fun name?</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>There's an exact number, from the original 1969 paper — László Bélády, working at IBM with two colleagues, Nelson and Shedler, published it in Communications of the ACM. They constructed a reference string — the sequence of pages a program touches — specifically to break the intuition that more memory always helps.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>What's the actual string?</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5. Run that through FIFO with three frames, you get nine page faults. Run the exact same string through FIFO with <em>four</em> frames — one more room in the building — and you get ten.</p></div>
+        <div class="line"><span class="who jonah">JONAH</span><p>You gave it MORE memory and it got WORSE.</p></div>
+        <div class="line"><span class="who priya">PRIYA</span><p>Strictly worse, on the exact same access pattern. And it's specifically a FIFO problem — algorithms like LRU or Optimal are what's called "stack algorithms," and it's provable that for those, more frames can never hurt you. FIFO just doesn't have that property. It's one of those results that's small enough to verify by hand and still completely upends your intuition the first time you trace through it.</p></div>
+      </div>
+      <div class="sources">
+        <span class="src-tag">Sources for this segment</span>
+        <ul>
+          <li>L. A. Bélády, R. A. Nelson, G. S. Shedler, <a href="https://en.wikipedia.org/wiki/B%C3%A9l%C3%A1dy%27s_anomaly" target="_blank" rel="noopener">"An anomaly in space-time characteristics of certain programs running in a paging machine"</a>, Communications of the ACM 12(6), 349–353 (1969)</li>
+        </ul>
+      </div>
+
       <div class="line"><span class="who jonah">JONAH</span><p>Okay, disk — quick version?</p></div>
       <div class="line"><span class="who priya">PRIYA</span><p>The city's permanent archive. Files get laid out contiguous, linked, or indexed — indexed's what real filesystems mostly use, it's basically a card catalog. And because a spinning disk's arm has to physically move, service order matters — SCAN sweeps across like an elevator instead of teleporting to whoever asked first.</p></div>
       <div class="line"><span class="who jonah">JONAH</span><p>And none of that matters on an SSD.</p></div>
